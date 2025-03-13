@@ -1,16 +1,16 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
-import { 
-  Mic, MicOff, MessageSquareText, Download, 
-  XCircle, PauseCircle, PlayCircle
-} from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { MeetingState } from '../types';
+import { MessageSquare, Download, PauseCircle, PlayCircle, PhoneOff, BarChart2 } from 'lucide-react';
 
 interface ControlPanelProps {
   onToggleTranscript: () => void;
   transcriptVisible: boolean;
+  onToggleBusinessData?: () => void;
+  businessDataVisible?: boolean;
   onExportChat: () => void;
-  meetingStatus: 'initializing' | 'active' | 'paused' | 'ended';
+  meetingStatus: MeetingState['status'];
   onToggleStatus: () => void;
   onEndMeeting: () => void;
 }
@@ -18,72 +18,82 @@ interface ControlPanelProps {
 const ControlPanel = ({
   onToggleTranscript,
   transcriptVisible,
+  onToggleBusinessData,
+  businessDataVisible = false,
   onExportChat,
   meetingStatus,
   onToggleStatus,
   onEndMeeting
 }: ControlPanelProps) => {
   const isActive = meetingStatus === 'active';
+  const isMeetingOngoing = meetingStatus === 'active' || meetingStatus === 'paused';
   
   return (
-    <div className="glass-panel p-4 flex items-center justify-center gap-4 animate-slide-up">
-      {/* Mute/Unmute Toggle (simulated) */}
-      <button 
-        className="control-button group"
-        disabled={meetingStatus === 'ended'}
-      >
-        {true ? <Mic size={20} /> : <MicOff size={20} />}
-        <span className="control-button-label">Mute</span>
-      </button>
-      
-      {/* Transcript Toggle */}
-      <button 
-        className={cn(
-          "control-button group",
-          transcriptVisible && "bg-meeting-blue/10 text-meeting-blue"
-        )}
-        onClick={onToggleTranscript}
-        disabled={meetingStatus === 'ended'}
-      >
-        <MessageSquareText size={20} />
-        <span className="control-button-label">
+    <div className="glass-panel p-4 flex flex-wrap justify-between items-center gap-2 animate-fade-in">
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onToggleTranscript}
+          className={transcriptVisible ? 'bg-secondary/50' : ''}
+        >
+          <MessageSquare className="h-4 w-4 mr-2" />
           {transcriptVisible ? 'Hide Transcript' : 'Show Transcript'}
-        </span>
-      </button>
-      
-      {/* Pause/Resume Toggle */}
-      <button 
-        className={cn(
-          "control-button group",
-          !isActive && meetingStatus !== 'ended' && "bg-meeting-yellow/10 text-meeting-yellow"
+        </Button>
+        
+        {onToggleBusinessData && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onToggleBusinessData}
+            className={businessDataVisible ? 'bg-secondary/50' : ''}
+          >
+            <BarChart2 className="h-4 w-4 mr-2" />
+            {businessDataVisible ? 'Hide Business Data' : 'Show Business Data'}
+          </Button>
         )}
-        onClick={onToggleStatus}
-        disabled={meetingStatus === 'ended'}
-      >
-        {isActive ? <PauseCircle size={20} /> : <PlayCircle size={20} />}
-        <span className="control-button-label">
-          {isActive ? 'Pause' : 'Resume'}
-        </span>
-      </button>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onExportChat}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Export Chat
+        </Button>
+      </div>
       
-      {/* Export Chat */}
-      <button 
-        className="control-button group"
-        onClick={onExportChat}
-      >
-        <Download size={20} />
-        <span className="control-button-label">Export</span>
-      </button>
-      
-      {/* End Meeting */}
-      <button 
-        className="control-button danger group"
-        onClick={onEndMeeting}
-        disabled={meetingStatus === 'ended'}
-      >
-        <XCircle size={20} />
-        <span className="control-button-label">End</span>
-      </button>
+      <div className="flex gap-2">
+        {isMeetingOngoing && (
+          <Button
+            variant={isActive ? "secondary" : "default"}
+            size="sm"
+            onClick={onToggleStatus}
+          >
+            {isActive ? (
+              <>
+                <PauseCircle className="h-4 w-4 mr-2" />
+                Pause
+              </>
+            ) : (
+              <>
+                <PlayCircle className="h-4 w-4 mr-2" />
+                Resume
+              </>
+            )}
+          </Button>
+        )}
+        
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={onEndMeeting}
+          disabled={meetingStatus === 'ended'}
+        >
+          <PhoneOff className="h-4 w-4 mr-2" />
+          End Meeting
+        </Button>
+      </div>
     </div>
   );
 };

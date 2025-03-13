@@ -1,5 +1,7 @@
 
-import { Agent, AgentRole, Message } from '../types';
+import { Agent, AgentRole, Message, AgentStatus } from '../types';
+import { generateRoleInsights } from './businessDataUtils';
+import { sampleBusinessData } from '../data/sampleBusinessData';
 
 // Sample data for the agents
 export const getDefaultAgents = (): Agent[] => [
@@ -43,13 +45,13 @@ export const getInitialMessages = (): Message[] => [
     id: '1',
     agentId: 'ceo-1',
     role: 'CEO',
-    text: 'Good morning everyone. Let\'s discuss our Q3 strategy and the upcoming product launch.',
+    text: 'Good morning everyone. Let\'s discuss our 2023 performance and strategic plans for 2024 based on our business data.',
     timestamp: new Date(Date.now() - 60000),
     status: 'sent',
   },
 ];
 
-// Simulated message generation (this would be replaced with actual API calls)
+// Simulated message generation with business data context
 export const generateAgentMessage = async (
   previousMessages: Message[],
   agent: Agent
@@ -60,35 +62,38 @@ export const generateAgentMessage = async (
   // Simulating API latency
   await new Promise(resolve => setTimeout(resolve, 1500));
   
-  // Sample responses based on agent role - these are placeholders
+  // Get business insights for this agent's role
+  const insights = generateRoleInsights(agent.role, sampleBusinessData);
+  
+  // Sample responses based on agent role and business data context
   const responses: Record<AgentRole, string[]> = {
     'CEO': [
-      'I want to see us focus on increasing market share this quarter.',
-      'Our main priority should be launching the new product line on schedule.',
-      'Customer retention metrics look good, but we need to improve acquisition.',
-      'What are your thoughts on expanding into the European market by Q4?',
+      `Our company ${sampleBusinessData.companyName} has shown impressive growth with ${insights.keyMetrics.revenueGrowth?.growth}% revenue growth. Customer satisfaction is at ${insights.keyMetrics.customerSatisfaction}/10 which is strong.`,
+      `We need to focus on our strategic initiatives like ${insights.strategicFocus.join(', ')}. Market share has increased to ${sampleBusinessData.marketingData.slice(-1)[0].marketShare}%, but we need to keep pushing.`,
+      `The executive team has done great work. Our profit margin is now at ${insights.keyMetrics.profitMargin} which exceeds our targets. Let's discuss how we maintain this momentum.`,
+      `I'm concerned about market threats like ${insights.challenges.slice(0, 2).join(' and ')}. We should develop contingency plans while pursuing opportunities in ${insights.opportunities.slice(0, 2).join(' and ')}.`,
     ],
     'CTO': [
-      'The development team is on track to deliver the new features by next month.',
-      'We need to address some technical debt before scaling further.',
-      'I recommend we invest more in our cloud infrastructure to support growth.',
-      'The AI integration is showing promising results in our initial tests.',
+      `From a technology perspective, we've completed key projects like ${insights.completedProjects.join(', ')}. Our development velocity is at ${insights.keyMetrics.developmentVelocity} story points per sprint.`,
+      `Our tech stack now includes ${sampleBusinessData.technologyData.slice(-1)[0].techStack.slice(-3).join(', ')} which has improved our capabilities. Infrastructure costs have increased to $${insights.keyMetrics.technicalDebt}k as we've scaled.`,
+      `Technical debt is at ${insights.keyMetrics.technicalDebt}/10, and we need to allocate time to address it. I propose dedicating 20% of our engineering time to refactoring and architectural improvements.`,
+      `For the coming year, we're planning to implement ${insights.plannedProjects.join(', ')}. These align with our product roadmap and should drive significant business value.`,
     ],
     'CFO': [
-      'Our Q2 revenue exceeded projections by 12%, but expenses also increased.',
-      'I suggest we allocate more budget to R&D given the competitive landscape.',
-      'The current burn rate is sustainable given our runway and growth metrics.',
-      'We should consider raising another round of funding in the next 6 months.',
+      `Financial performance has been strong with revenue of $${sampleBusinessData.financialData.slice(-1)[0].revenue/1000000}M and profit of $${sampleBusinessData.financialData.slice(-1)[0].profit/1000000}M. Our profit margin is ${insights.keyMetrics.profitMargin}.`,
+      `We've allocated $${insights.keyMetrics.budgetAllocation.rnd/1000000}M to R&D and $${insights.keyMetrics.budgetAllocation.marketing/1000000}M to marketing. ROI on our investments is ${sampleBusinessData.financialData.slice(-1)[0].roi * 100}%.`,
+      `Cash flow remains positive at $${sampleBusinessData.financialData.slice(-1)[0].cashFlow/1000000}M, giving us runway for continued investments while maintaining profitability.`,
+      `I recommend increasing our investment budget by 30% next year to capitalize on growth opportunities, while maintaining discipline on operational expenses.`,
     ],
     'HR': [
-      'Employee satisfaction scores are up 15% since implementing the new benefits.',
-      'We need to address the high turnover in the marketing department.',
-      'The new remote work policy has been well-received across all departments.',
-      'I recommend expanding our talent acquisition team to support our growth plans.',
+      `We've grown to ${insights.workforceSummary.split(' ')[3]} employees with ${insights.keyMetrics.attritionRate} attrition rate. Employee satisfaction is at ${insights.keyMetrics.employeeSatisfaction}/10 which has improved from last year.`,
+      `Engineering now makes up ${Math.round(Number(sampleBusinessData.hrData.slice(-1)[0].departmentDistribution.engineering) / Number(sampleBusinessData.hrData.slice(-1)[0].totalEmployees) * 100)}% of our workforce. We've spent $${insights.keyMetrics.trainingInvestment/1000}k on training and development programs.`,
+      `Recruitment remains challenging, especially for specialized roles. We're implementing new initiatives including ${insights.talentInitiatives.slice(0, 2).join(' and ')} to attract and retain top talent.`,
+      `I recommend expanding our professional development budget and implementing a more robust career progression framework to improve retention in high-demand roles.`,
     ],
   };
   
-  // Select a random response based on agent role
+  // Select a contextually relevant response based on agent role
   const possibleResponses = responses[agent.role];
   const randomResponse = possibleResponses[Math.floor(Math.random() * possibleResponses.length)];
   

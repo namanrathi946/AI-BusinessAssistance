@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import MeetingGrid from '../components/MeetingGrid';
 import TranscriptPanel from '../components/TranscriptPanel';
 import ControlPanel from '../components/ControlPanel';
+import BusinessDataPanel from '../components/BusinessDataPanel';
 import { MeetingState, Message, Agent } from '../types';
 import { getDefaultAgents, getInitialMessages, simulateConversation } from '../utils/agentUtils';
 import { toast } from '@/hooks/use-toast';
@@ -16,6 +17,9 @@ const Index = () => {
     currentSpeaker: null,
     transcriptVisible: true,
   });
+  
+  // Additional state for business data visibility
+  const [businessDataVisible, setBusinessDataVisible] = useState(false);
   
   // Start the meeting simulation
   useEffect(() => {
@@ -70,6 +74,19 @@ const Index = () => {
       ...prev,
       transcriptVisible: !prev.transcriptVisible,
     }));
+  };
+  
+  // Toggle business data visibility
+  const handleToggleBusinessData = () => {
+    setBusinessDataVisible(prev => !prev);
+    
+    if (!businessDataVisible) {
+      toast({
+        title: "Business Data Opened",
+        description: "Viewing company performance metrics and KPIs.",
+        duration: 3000,
+      });
+    }
   };
   
   // Toggle meeting status (pause/resume)
@@ -150,7 +167,7 @@ const Index = () => {
       {/* Header */}
       <header className="glass-panel mb-6 p-4 flex justify-between items-center animate-fade-in">
         <div>
-          <h1 className="text-2xl font-bold">Executive Meeting</h1>
+          <h1 className="text-2xl font-bold">TechNova Solutions - Executive Meeting</h1>
           <p className="text-muted-foreground">
             {meetingState.status === 'initializing' ? 'Connecting participants...' :
              meetingState.status === 'active' ? 'In Progress' :
@@ -173,6 +190,12 @@ const Index = () => {
       
       {/* Main content */}
       <main className="flex-1 flex flex-col space-y-6">
+        {/* Business data panel (conditionally displayed) */}
+        <BusinessDataPanel 
+          isVisible={businessDataVisible}
+          onToggleVisibility={handleToggleBusinessData}
+        />
+        
         {/* Meeting grid */}
         <div className="flex-1">
           <MeetingGrid 
@@ -195,6 +218,8 @@ const Index = () => {
         <ControlPanel 
           onToggleTranscript={handleToggleTranscript}
           transcriptVisible={meetingState.transcriptVisible}
+          onToggleBusinessData={handleToggleBusinessData}
+          businessDataVisible={businessDataVisible}
           onExportChat={handleExportChat}
           meetingStatus={meetingState.status}
           onToggleStatus={handleToggleStatus}
