@@ -52,64 +52,164 @@ export const getInitialMessages = (): Message[] => [
   },
 ];
 
-// Simulated message generation with business data context
+// OpenAI integration for generating contextually relevant responses
+const OPENAI_API_KEY = "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";
+
+// Generate a prompt for the AI based on the agent role, business data, and discussion topic
+const generatePrompt = (
+  agent: Agent, 
+  businessData: BusinessData,
+  previousMessages: Message[],
+  topic: string = ''
+): string => {
+  const insights = generateRoleInsights(agent.role, businessData);
+  
+  // Create conversation history for context
+  const conversationHistory = previousMessages.map(msg => {
+    const speaker = msg.role;
+    return `${speaker}: ${msg.text}`;
+  }).join('\n');
+  
+  // Base system prompt according to role
+  let systemPrompt = `You are the ${agent.role} of ${businessData.companyName}, a company with the following metrics:
+- Revenue: $${businessData.financialData.slice(-1)[0].revenue/1000000}M
+- Profit: $${businessData.financialData.slice(-1)[0].profit/1000000}M
+- Employees: ${businessData.hrData.slice(-1)[0].totalEmployees}
+- Market Share: ${businessData.marketingData.slice(-1)[0].marketShare}%\n\n`;
+  
+  // Add role-specific context
+  switch(agent.role) {
+    case 'CEO':
+      systemPrompt += `As the CEO, you focus on overall company strategy, growth, and vision. 
+Strategic initiatives include: ${insights.strategicFocus.join(', ')}.
+Key challenges: ${insights.challenges.join(', ')}.
+Key opportunities: ${insights.opportunities.join(', ')}.`;
+      break;
+    case 'CTO':
+      systemPrompt += `As the CTO, you focus on technology strategy and implementation.
+Tech stack: ${businessData.technologyData.slice(-1)[0].techStack.join(', ')}.
+Recently completed projects: ${insights.completedProjects.join(', ')}.
+Planned projects: ${insights.plannedProjects.join(', ')}.
+Technical debt level: ${insights.keyMetrics.technicalDebt}/10.`;
+      break;
+    case 'CFO':
+      systemPrompt += `As the CFO, you focus on financial performance and budget allocation.
+Budget allocation: R&D $${insights.keyMetrics.budgetAllocation.rnd/1000000}M, Marketing $${insights.keyMetrics.budgetAllocation.marketing/1000000}M.
+Profit margin: ${insights.keyMetrics.profitMargin}.
+Cash flow: $${businessData.financialData.slice(-1)[0].cashFlow/1000000}M.
+ROI: ${businessData.financialData.slice(-1)[0].roi * 100}%.`;
+      break;
+    case 'HR':
+      systemPrompt += `As the HR Director, you focus on workforce management and company culture.
+Total employees: ${insights.workforceSummary.split(' ')[3]}.
+Attrition rate: ${insights.keyMetrics.attritionRate}.
+Employee satisfaction: ${insights.keyMetrics.employeeSatisfaction}/10.
+Training investment: $${insights.keyMetrics.trainingInvestment/1000}k.
+Talent initiatives: ${insights.talentInitiatives.join(', ')}.`;
+      break;
+  }
+  
+  // Add topic instructions if provided
+  let userPrompt = `You are participating in an executive boardroom discussion with the CEO, CTO, CFO, and HR Director.`;
+  
+  if (topic && topic.trim()) {
+    userPrompt += ` The specific topic being discussed is: "${topic}".`;
+  }
+  
+  userPrompt += ` Review the conversation history below and provide a thoughtful response that:
+1. Addresses any questions or points raised by other executives
+2. Offers insights from your area of expertise
+3. Is concise (100-150 words)
+4. Is businesslike but conversational
+5. Connects to the specific business data relevant to your role
+
+Conversation history:
+${conversationHistory}
+
+Respond as the ${agent.role}:`;
+
+  return { systemPrompt, userPrompt };
+};
+
+// Simulated message generation with AI integration
 export const generateAgentMessage = async (
   previousMessages: Message[],
   agent: Agent,
-  businessData: BusinessData = sampleBusinessData
+  businessData: BusinessData = sampleBusinessData,
+  topic: string = ''
 ): Promise<Message> => {
-  // In a real implementation, this would call your API with the agent's role
-  // and the conversation history to generate a contextually appropriate response
-  
-  // Simulating API latency
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // Get business insights for this agent's role
-  const insights = generateRoleInsights(agent.role, businessData);
-  
-  // Sample responses based on agent role and business data context
-  const responses: Record<AgentRole, string[]> = {
-    'CEO': [
-      `Our company ${businessData.companyName} has shown impressive growth with ${insights.keyMetrics.revenueGrowth?.growth}% revenue growth. Customer satisfaction is at ${insights.keyMetrics.customerSatisfaction}/10 which is strong.`,
-      `We need to focus on our strategic initiatives like ${insights.strategicFocus.join(', ')}. Market share has increased to ${businessData.marketingData.slice(-1)[0].marketShare}%, but we need to keep pushing.`,
-      `The executive team has done great work. Our profit margin is now at ${insights.keyMetrics.profitMargin} which exceeds our targets. Let's discuss how we maintain this momentum.`,
-      `I'm concerned about market threats like ${insights.challenges.slice(0, 2).join(' and ')}. We should develop contingency plans while pursuing opportunities in ${insights.opportunities.slice(0, 2).join(' and ')}.`,
-    ],
-    'CTO': [
-      `From a technology perspective, we've completed key projects like ${insights.completedProjects.join(', ')}. Our development velocity is at ${insights.keyMetrics.developmentVelocity} story points per sprint.`,
-      `Our tech stack now includes ${businessData.technologyData.slice(-1)[0].techStack.slice(-3).join(', ')} which has improved our capabilities. Infrastructure costs have increased to $${insights.keyMetrics.technicalDebt}k as we've scaled.`,
-      `Technical debt is at ${insights.keyMetrics.technicalDebt}/10, and we need to allocate time to address it. I propose dedicating 20% of our engineering time to refactoring and architectural improvements.`,
-      `For the coming year, we're planning to implement ${insights.plannedProjects.join(', ')}. These align with our product roadmap and should drive significant business value.`,
-    ],
-    'CFO': [
-      `Financial performance has been strong with revenue of $${businessData.financialData.slice(-1)[0].revenue/1000000}M and profit of $${businessData.financialData.slice(-1)[0].profit/1000000}M. Our profit margin is ${insights.keyMetrics.profitMargin}.`,
-      `We've allocated $${insights.keyMetrics.budgetAllocation.rnd/1000000}M to R&D and $${insights.keyMetrics.budgetAllocation.marketing/1000000}M to marketing. ROI on our investments is ${businessData.financialData.slice(-1)[0].roi * 100}%.`,
-      `Cash flow remains positive at $${businessData.financialData.slice(-1)[0].cashFlow/1000000}M, giving us runway for continued investments while maintaining profitability.`,
-      `I recommend increasing our investment budget by 30% next year to capitalize on growth opportunities, while maintaining discipline on operational expenses.`,
-    ],
-    'HR': [
-      `We've grown to ${insights.workforceSummary.split(' ')[3]} employees with ${insights.keyMetrics.attritionRate} attrition rate. Employee satisfaction is at ${insights.keyMetrics.employeeSatisfaction}/10 which has improved from last year.`,
-      `Engineering now makes up ${Math.round(Number(businessData.hrData.slice(-1)[0].departmentDistribution.engineering) / Number(businessData.hrData.slice(-1)[0].totalEmployees) * 100)}% of our workforce. We've spent $${insights.keyMetrics.trainingInvestment/1000}k on training and development programs.`,
-      `Recruitment remains challenging, especially for specialized roles. We're implementing new initiatives including ${insights.talentInitiatives.slice(0, 2).join(' and ')} to attract and retain top talent.`,
-      `I recommend expanding our professional development budget and implementing a more robust career progression framework to improve retention in high-demand roles.`,
-    ],
-  };
-  
-  // Select a contextually relevant response based on agent role
-  const possibleResponses = responses[agent.role];
-  const randomResponse = possibleResponses[Math.floor(Math.random() * possibleResponses.length)];
-  
-  return {
-    id: Date.now().toString(),
-    agentId: agent.id,
-    role: agent.role,
-    text: randomResponse,
-    timestamp: new Date(),
-    status: 'sent',
-  };
+  try {
+    // Generate prompt for OpenAI
+    const { systemPrompt, userPrompt } = generatePrompt(agent, businessData, previousMessages, topic);
+    
+    // Call OpenAI API
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        max_tokens: 250,
+        temperature: 0.7
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const messageText = data.choices[0].message.content.trim();
+    
+    return {
+      id: Date.now().toString(),
+      agentId: agent.id,
+      role: agent.role,
+      text: messageText,
+      timestamp: new Date(),
+      status: 'sent',
+    };
+  } catch (error) {
+    console.error('Error generating message with OpenAI:', error);
+    
+    // Fallback to static messages if API fails
+    const insights = generateRoleInsights(agent.role, businessData);
+    
+    // Simplified fallback responses
+    const fallbackResponses: Record<AgentRole, string[]> = {
+      'CEO': [
+        `Our company ${businessData.companyName} has shown impressive growth with ${insights.keyMetrics.revenueGrowth?.growth}% revenue growth. Let's discuss our strategy on ${topic || 'our business performance'}.`,
+      ],
+      'CTO': [
+        `From a technology perspective, our focus on ${topic || 'innovation'} has been successful with our tech stack now including ${businessData.technologyData.slice(-1)[0].techStack.slice(-3).join(', ')}.`,
+      ],
+      'CFO': [
+        `Regarding ${topic || 'our financials'}, we've seen strong performance with revenue of $${businessData.financialData.slice(-1)[0].revenue/1000000}M and a profit margin of ${insights.keyMetrics.profitMargin}.`,
+      ],
+      'HR': [
+        `From an HR perspective, ${topic || 'our team growth'} has been notable as we've grown to ${insights.workforceSummary.split(' ')[3]} employees with ${insights.keyMetrics.attritionRate} attrition rate.`,
+      ],
+    };
+    
+    const fallbackResponse = fallbackResponses[agent.role][0];
+    
+    return {
+      id: Date.now().toString(),
+      agentId: agent.id,
+      role: agent.role,
+      text: fallbackResponse,
+      timestamp: new Date(),
+      status: 'sent',
+    };
+  }
 };
 
-// In a real implementation, this would be replaced with WebSocket/SSE connections
 // This simulates the turn-based conversation flow
 export const simulateConversation = async (
   agents: Agent[],
@@ -119,7 +219,7 @@ export const simulateConversation = async (
   businessData: BusinessData,
   topic: string = ''
 ) => {
-  console.log(`Starting discussion${topic ? ` on topic: ${topic}` : ''}`);
+  console.log(`Starting discussion${topic ? ` on topic: ${topic}` : ''}`)
   console.log("Business data for discussion:", businessData);
   
   // If there are fewer than 8 messages, continue the conversation
@@ -142,8 +242,14 @@ export const simulateConversation = async (
     // Update to speaking status
     onAgentStatusChange(nextAgent.id, 'speaking');
     
-    // Generate and add the new message
-    const newMessage = await generateAgentMessage(initialMessages, nextAgent, businessData);
+    // Generate and add the new message - passing the topic to make sure
+    // the agents discuss the specified topic
+    const newMessage = await generateAgentMessage(
+      initialMessages, 
+      nextAgent, 
+      businessData,
+      topic
+    );
     onNewMessage(newMessage);
     
     // Set the agent back to idle after speaking

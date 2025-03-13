@@ -47,7 +47,19 @@ const Index = () => {
       status: 'active',
     }));
     
-    // Start the conversation simulation
+    // Store the topic in the meeting state for future reference
+    setMeetingState(prev => ({
+      ...prev,
+      discussionTopic: topic,
+    }));
+    
+    toast({
+      title: "Boardroom Discussion Started",
+      description: topic ? `Topic: ${topic}` : "All participants have joined the call.",
+      duration: 3000,
+    });
+    
+    // Start the conversation simulation with the topic
     simulateConversation(
       meetingState.agents,
       meetingState.messages,
@@ -56,12 +68,6 @@ const Index = () => {
       businessData || sampleBusinessData,
       topic
     );
-    
-    toast({
-      title: "Boardroom Discussion Started",
-      description: topic ? `Topic: ${topic}` : "All participants have joined the call.",
-      duration: 3000,
-    });
   };
   
   // Handle new messages from agents

@@ -27,4 +27,5 @@ export interface MeetingState {
   messages: Message[];
   currentSpeaker: string | null;
   transcriptVisible: boolean;
+  discussionTopic?: string;
 }
