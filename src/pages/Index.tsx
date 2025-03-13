@@ -4,9 +4,12 @@ import MeetingGrid from '../components/MeetingGrid';
 import TranscriptPanel from '../components/TranscriptPanel';
 import ControlPanel from '../components/ControlPanel';
 import BusinessDataPanel from '../components/BusinessDataPanel';
+import DatasetUploadModal from '../components/DatasetUploadModal';
 import { MeetingState, Message, Agent } from '../types';
 import { getDefaultAgents, getInitialMessages, simulateConversation } from '../utils/agentUtils';
 import { toast } from '@/hooks/use-toast';
+import { BusinessData } from '../types/businessData';
+import { sampleBusinessData } from '../data/sampleBusinessData';
 
 const Index = () => {
   // Initialize meeting state
@@ -20,6 +23,12 @@ const Index = () => {
   
   // Additional state for business data visibility
   const [businessDataVisible, setBusinessDataVisible] = useState(false);
+  
+  // Dataset upload modal state
+  const [isDatasetModalOpen, setIsDatasetModalOpen] = useState(false);
+  
+  // Business data state
+  const [businessData, setBusinessData] = useState<BusinessData>(sampleBusinessData);
   
   // Start the meeting simulation
   useEffect(() => {
@@ -35,7 +44,8 @@ const Index = () => {
         meetingState.agents,
         meetingState.messages,
         handleNewMessage,
-        handleAgentStatusChange
+        handleAgentStatusChange,
+        businessData
       );
       
       toast({
@@ -162,12 +172,29 @@ const Index = () => {
     });
   };
   
+  // Handle dataset upload
+  const handleDatasetUploaded = (newData: BusinessData) => {
+    setBusinessData(newData);
+    
+    toast({
+      title: "Dataset Uploaded",
+      description: `Successfully loaded data for ${newData.companyName}.`,
+      duration: 3000,
+    });
+    
+    // Show the business data panel after upload
+    setBusinessDataVisible(true);
+    
+    // In a real implementation, this would restart the meeting with new data
+    // or update ongoing discussion with the new context
+  };
+  
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <header className="glass-panel mb-6 p-4 flex justify-between items-center animate-fade-in">
         <div>
-          <h1 className="text-2xl font-bold">TechNova Solutions - Executive Meeting</h1>
+          <h1 className="text-2xl font-bold">{businessData.companyName} - Executive Meeting</h1>
           <p className="text-muted-foreground">
             {meetingState.status === 'initializing' ? 'Connecting participants...' :
              meetingState.status === 'active' ? 'In Progress' :
@@ -224,8 +251,16 @@ const Index = () => {
           meetingStatus={meetingState.status}
           onToggleStatus={handleToggleStatus}
           onEndMeeting={handleEndMeeting}
+          onUploadDataset={() => setIsDatasetModalOpen(true)}
         />
       </main>
+      
+      {/* Dataset Upload Modal */}
+      <DatasetUploadModal 
+        open={isDatasetModalOpen}
+        onClose={() => setIsDatasetModalOpen(false)}
+        onDatasetUploaded={handleDatasetUploaded}
+      />
     </div>
   );
 };
