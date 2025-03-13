@@ -1,3 +1,4 @@
+
 import { Agent, AgentRole, Message, AgentStatus } from '../types';
 import { generateRoleInsights } from './businessDataUtils';
 import { sampleBusinessData } from '../data/sampleBusinessData';
@@ -110,7 +111,7 @@ export const generateAgentMessage = async (
 
 // In a real implementation, this would be replaced with WebSocket/SSE connections
 // This simulates the turn-based conversation flow
-export const simulateConversation = (
+export const simulateConversation = async (
   agents: Agent[],
   initialMessages: Message[],
   onNewMessage: (message: Message) => void,
@@ -151,6 +152,8 @@ export const simulateConversation = (
       
       // Continue the conversation after a pause
       setTimeout(() => {
+        // We need to call this as an async function without await
+        // since we're inside a setTimeout callback
         simulateConversation(agents, [...initialMessages, newMessage], onNewMessage, onAgentStatusChange, businessData, topic);
       }, 2000);
       

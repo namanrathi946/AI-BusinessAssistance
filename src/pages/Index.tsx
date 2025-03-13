@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import MeetingGrid from '../components/MeetingGrid';
 import TranscriptPanel from '../components/TranscriptPanel';
@@ -15,6 +14,7 @@ import { FormEvent, useState as useFormState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 const Index = () => {
   // Initialize meeting state
