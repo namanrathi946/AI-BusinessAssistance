@@ -1,10 +1,11 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 20% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -13,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -32,22 +33,15 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -61,7 +55,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -79,14 +73,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -97,5 +83,95 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+/* Custom styles for virtual meeting */
+.glass-panel {
+  @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border border-gray-200/50 dark:border-gray-800/50 rounded-2xl shadow-lg;
+}
+
+.message-bubble {
+  @apply relative p-3 rounded-2xl bg-primary/10 text-foreground max-w-[90%] mb-2 animate-slide-up;
+}
+
+.message-bubble::after {
+  content: "";
+  @apply absolute top-0 -translate-y-1/2 border-8 border-transparent;
+}
+
+.message-bubble.incoming {
+  @apply ml-2 mr-auto;
+}
+
+.message-bubble.incoming::after {
+  @apply left-2 border-b-primary/10;
+}
+
+.message-bubble.outgoing {
+  @apply mr-2 ml-auto bg-meeting-blue/10;
+}
+
+.message-bubble.outgoing::after {
+  @apply right-2 border-b-meeting-blue/10;
+}
+
+/* Status pill animations */
+.status-pill {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-300 ease-in-out;
+}
+
+.status-pill.speaking {
+  @apply bg-meeting-green/20 text-meeting-green animate-pulse;
+}
+
+.status-pill.listening {
+  @apply bg-meeting-blue/20 text-meeting-blue;
+}
+
+.status-pill.idle {
+  @apply bg-meeting-gray/20 text-meeting-gray;
+}
+
+.status-pill.thinking {
+  @apply bg-meeting-purple/20 text-meeting-purple;
+}
+
+/* Avatar animations */
+.avatar-container {
+  @apply relative flex items-center justify-center rounded-full overflow-hidden transition-all duration-500 ease-in-out;
+}
+
+.avatar-container.speaking {
+  @apply ring-2 ring-meeting-green ring-offset-2 ring-offset-background;
+}
+
+.avatar-pulse {
+  @apply absolute inset-0 rounded-full;
+}
+
+.avatar-pulse.speaking {
+  @apply animate-pulse bg-meeting-green/20;
+}
+
+.avatar-pulse.listening {
+  @apply animate-pulse-slow bg-meeting-blue/10;
+}
+
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Control buttons */
+.control-button {
+  @apply relative flex items-center justify-center h-12 w-12 rounded-full bg-white/90 dark:bg-gray-800/90 shadow-md hover:shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95;
+}
+
+.control-button.danger {
+  @apply bg-meeting-red text-white;
+}
+
+.control-button-label {
+  @apply absolute -bottom-6 text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200;
 }
