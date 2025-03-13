@@ -1,4 +1,3 @@
-
 import { Agent, AgentRole, Message, AgentStatus } from '../types';
 import { generateRoleInsights } from './businessDataUtils';
 import { sampleBusinessData } from '../data/sampleBusinessData';
@@ -111,18 +110,22 @@ export const generateAgentMessage = async (
 
 // In a real implementation, this would be replaced with WebSocket/SSE connections
 // This simulates the turn-based conversation flow
-export const simulateConversation = async (
+export const simulateConversation = (
   agents: Agent[],
-  messages: Message[],
-  onMessage: (message: Message) => void,
+  initialMessages: Message[],
+  onNewMessage: (message: Message) => void,
   onAgentStatusChange: (agentId: string, status: Agent['status']) => void,
-  businessData: BusinessData = sampleBusinessData
+  businessData: BusinessData,
+  topic: string = ''
 ) => {
+  console.log(`Starting discussion${topic ? ` on topic: ${topic}` : ''}`);
+  console.log("Business data for discussion:", businessData);
+  
   // If there are fewer than 8 messages, continue the conversation
-  if (messages.length < 8) {
+  if (initialMessages.length < 8) {
     // Determine which agent speaks next (simple round-robin)
     const lastSpeakerIndex = agents.findIndex(agent => 
-      agent.id === messages[messages.length - 1]?.agentId
+      agent.id === initialMessages[initialMessages.length - 1]?.agentId
     );
     
     // Choose the next agent (circular)
@@ -139,8 +142,8 @@ export const simulateConversation = async (
     onAgentStatusChange(nextAgent.id, 'speaking');
     
     // Generate and add the new message
-    const newMessage = await generateAgentMessage(messages, nextAgent, businessData);
-    onMessage(newMessage);
+    const newMessage = await generateAgentMessage(initialMessages, nextAgent, businessData);
+    onNewMessage(newMessage);
     
     // Set the agent back to idle after speaking
     setTimeout(() => {
@@ -148,7 +151,7 @@ export const simulateConversation = async (
       
       // Continue the conversation after a pause
       setTimeout(() => {
-        simulateConversation(agents, [...messages, newMessage], onMessage, onAgentStatusChange, businessData);
+        simulateConversation(agents, [...initialMessages, newMessage], onNewMessage, onAgentStatusChange, businessData, topic);
       }, 2000);
       
     }, 2000);

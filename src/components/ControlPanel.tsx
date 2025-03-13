@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MeetingState } from '../types';
-import { MessageSquare, Download, PauseCircle, PlayCircle, PhoneOff, BarChart2, Upload, Database } from 'lucide-react';
+import { MessageSquare, Download, PauseCircle, PlayCircle, PhoneOff, BarChart2, Database, Play, Users } from 'lucide-react';
 
 interface ControlPanelProps {
   onToggleTranscript: () => void;
@@ -14,6 +14,8 @@ interface ControlPanelProps {
   onToggleStatus: () => void;
   onEndMeeting: () => void;
   onUploadDataset?: () => void;
+  onStartDiscussion?: () => void;
+  hasBusinessData?: boolean;
 }
 
 const ControlPanel = ({
@@ -25,7 +27,9 @@ const ControlPanel = ({
   meetingStatus,
   onToggleStatus,
   onEndMeeting,
-  onUploadDataset
+  onUploadDataset,
+  onStartDiscussion,
+  hasBusinessData = false
 }: ControlPanelProps) => {
   const isActive = meetingStatus === 'active';
   const isMeetingOngoing = meetingStatus === 'active' || meetingStatus === 'paused';
@@ -63,6 +67,18 @@ const ControlPanel = ({
           >
             <Database className="h-4 w-4 mr-2" />
             Upload Business Data
+          </Button>
+        )}
+
+        {onStartDiscussion && hasBusinessData && meetingStatus !== 'active' && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onStartDiscussion}
+            className="bg-meeting-green text-white hover:bg-meeting-green/90"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Start Boardroom Discussion
           </Button>
         )}
         

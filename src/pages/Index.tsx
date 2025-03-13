@@ -10,6 +10,11 @@ import { getDefaultAgents, getInitialMessages, simulateConversation } from '../u
 import { toast } from '@/hooks/use-toast';
 import { BusinessData } from '../types/businessData';
 import { sampleBusinessData } from '../data/sampleBusinessData';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { FormEvent, useState as useFormState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   // Initialize meeting state
@@ -28,35 +33,36 @@ const Index = () => {
   const [isDatasetModalOpen, setIsDatasetModalOpen] = useState(false);
   
   // Business data state
-  const [businessData, setBusinessData] = useState<BusinessData>(sampleBusinessData);
+  const [businessData, setBusinessData] = useState<BusinessData | null>(null);
+  
+  // Start discussion dialog state
+  const [isStartDiscussionDialogOpen, setIsStartDiscussionDialogOpen] = useState(false);
+  const [discussionTopic, setDiscussionTopic] = useState('');
   
   // Start the meeting simulation
-  useEffect(() => {
-    // Short delay to simulate initialization
-    const initTimer = setTimeout(() => {
-      setMeetingState(prev => ({
-        ...prev,
-        status: 'active',
-      }));
-      
-      // Start the conversation simulation
-      simulateConversation(
-        meetingState.agents,
-        meetingState.messages,
-        handleNewMessage,
-        handleAgentStatusChange,
-        businessData
-      );
-      
-      toast({
-        title: "Meeting Started",
-        description: "All participants have joined the call.",
-        duration: 3000,
-      });
-    }, 1500);
+  const startDiscussion = (topic: string = '') => {
+    // Set meeting status to active
+    setMeetingState(prev => ({
+      ...prev,
+      status: 'active',
+    }));
     
-    return () => clearTimeout(initTimer);
-  }, []);
+    // Start the conversation simulation
+    simulateConversation(
+      meetingState.agents,
+      meetingState.messages,
+      handleNewMessage,
+      handleAgentStatusChange,
+      businessData || sampleBusinessData,
+      topic
+    );
+    
+    toast({
+      title: "Boardroom Discussion Started",
+      description: topic ? `Topic: ${topic}` : "All participants have joined the call.",
+      duration: 3000,
+    });
+  };
   
   // Handle new messages from agents
   const handleNewMessage = (message: Message) => {
@@ -185,8 +191,23 @@ const Index = () => {
     // Show the business data panel after upload
     setBusinessDataVisible(true);
     
-    // In a real implementation, this would restart the meeting with new data
-    // or update ongoing discussion with the new context
+    // Set meeting state to initializing to show it's ready to start
+    setMeetingState(prev => ({
+      ...prev,
+      status: 'initializing',
+    }));
+  };
+  
+  // Open start discussion dialog
+  const handleOpenStartDiscussionDialog = () => {
+    setIsStartDiscussionDialogOpen(true);
+  };
+  
+  // Handle start discussion form submission
+  const handleStartDiscussionSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setIsStartDiscussionDialogOpen(false);
+    startDiscussion(discussionTopic);
   };
   
   return (
@@ -194,9 +215,9 @@ const Index = () => {
       {/* Header */}
       <header className="glass-panel mb-6 p-4 flex justify-between items-center animate-fade-in">
         <div>
-          <h1 className="text-2xl font-bold">{businessData.companyName} - Executive Meeting</h1>
+          <h1 className="text-2xl font-bold">{businessData?.companyName || 'Executive Meeting'}</h1>
           <p className="text-muted-foreground">
-            {meetingState.status === 'initializing' ? 'Connecting participants...' :
+            {meetingState.status === 'initializing' ? 'Ready to start discussion' :
              meetingState.status === 'active' ? 'In Progress' :
              meetingState.status === 'paused' ? 'Paused' : 'Ended'}
           </p>
@@ -210,7 +231,7 @@ const Index = () => {
           <span className="text-sm font-medium">
             {meetingState.status === 'active' ? 'Live' :
              meetingState.status === 'paused' ? 'Paused' :
-             meetingState.status === 'ended' ? 'Ended' : 'Connecting...'}
+             meetingState.status === 'ended' ? 'Ended' : 'Ready'}
           </span>
         </div>
       </header>
@@ -252,6 +273,8 @@ const Index = () => {
           onToggleStatus={handleToggleStatus}
           onEndMeeting={handleEndMeeting}
           onUploadDataset={() => setIsDatasetModalOpen(true)}
+          onStartDiscussion={handleOpenStartDiscussionDialog}
+          hasBusinessData={!!businessData}
         />
       </main>
       
@@ -261,6 +284,38 @@ const Index = () => {
         onClose={() => setIsDatasetModalOpen(false)}
         onDatasetUploaded={handleDatasetUploaded}
       />
+      
+      {/* Start Discussion Dialog */}
+      <AlertDialog open={isStartDiscussionDialogOpen} onOpenChange={setIsStartDiscussionDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Start Boardroom Discussion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Provide a topic for the executive team to discuss, or leave blank for a general business review.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <form onSubmit={handleStartDiscussionSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="topic">Discussion Topic (Optional)</Label>
+                <Input 
+                  id="topic" 
+                  placeholder="e.g., 'Q3 Budget Planning' or 'New Product Launch Strategy'" 
+                  value={discussionTopic}
+                  onChange={(e) => setDiscussionTopic(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+            </div>
+            
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <Button type="submit">Start Discussion</Button>
+            </AlertDialogFooter>
+          </form>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
