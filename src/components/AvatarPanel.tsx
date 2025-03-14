@@ -30,7 +30,7 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage }: AvatarPanelProps)
   };
   
   return (
-    <div className="glass-panel h-full flex flex-col p-4 animate-fade-in">
+    <div className="glass-panel h-full flex flex-col p-4 animate-fade-in hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
       <div className="flex flex-col items-center space-y-3">
         <AvatarAnimation agent={agent} size="md" />
         
@@ -39,7 +39,7 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage }: AvatarPanelProps)
           <p className="text-sm text-muted-foreground font-semibold">{role}</p>
         </div>
         
-        <span className={cn("status-pill", statusClass[status])}>
+        <span className={cn("status-pill transition-all duration-300", statusClass[status])}>
           {statusText[status]}
         </span>
       </div>
@@ -47,7 +47,7 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage }: AvatarPanelProps)
       {/* Message bubble that appears when agent is speaking */}
       {isCurrentSpeaker && lastMessage && (
         <div className="mt-auto w-full">
-          <div className="message-bubble incoming mt-4">
+          <div className="message-bubble incoming mt-4 animate-pulse-once transition-all duration-300">
             <p className="text-sm">{lastMessage}</p>
           </div>
         </div>

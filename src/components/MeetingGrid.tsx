@@ -20,14 +20,18 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
   };
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full animate-fade-in">
       {agents.map((agent) => (
-        <AvatarPanel
+        <div 
           key={agent.id}
-          agent={agent}
-          isCurrentSpeaker={agent.id === currentSpeaker}
-          lastMessage={getLastMessageForAgent(agent.id)}
-        />
+          className={`transition-all duration-500 ${agent.id === currentSpeaker ? 'scale-102 z-10' : 'scale-100'}`}
+        >
+          <AvatarPanel
+            agent={agent}
+            isCurrentSpeaker={agent.id === currentSpeaker}
+            lastMessage={getLastMessageForAgent(agent.id)}
+          />
+        </div>
       ))}
     </div>
   );

@@ -89,16 +89,16 @@
 
 /* Custom styles for virtual meeting */
 .glass-panel {
-  @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border border-gray-200/50 dark:border-gray-800/50 rounded-2xl shadow-lg;
+  @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border border-gray-200/50 dark:border-gray-800/50 rounded-2xl shadow-lg transition-all duration-300;
 }
 
 .message-bubble {
-  @apply relative p-3 rounded-2xl bg-primary/10 text-foreground max-w-[90%] mb-2 animate-slide-up;
+  @apply relative p-3 rounded-2xl bg-primary/10 text-foreground max-w-[90%] mb-2 animate-slide-up transition-all duration-300;
 }
 
 .message-bubble::after {
   content: "";
-  @apply absolute top-0 -translate-y-1/2 border-8 border-transparent;
+  @apply absolute top-0 -translate-y-1/2 border-8 border-transparent transition-all duration-300;
 }
 
 .message-bubble.incoming {
@@ -174,4 +174,51 @@
 
 .control-button-label {
   @apply absolute -bottom-6 text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200;
+}
+
+/* New Animation Keyframes */
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes pulse-once {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* New Animation Classes */
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+.animate-pulse-once {
+  animation: pulse-once 2s ease-in-out 1;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Hover Effects */
+.hover-scale {
+  @apply transition-transform duration-200 hover:scale-105;
+}
+
+.hover-lift {
+  @apply transition-transform duration-200 hover:-translate-y-1;
+}
+
+.hover-glow {
+  @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/10;
 }
