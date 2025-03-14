@@ -18,7 +18,9 @@ export const sampleBusinessData: BusinessData = {
       investmentBudget: 300000,
       marketingBudget: 250000,
       rndBudget: 500000,
-      roi: 0.18
+      roi: 0.18,
+      revenueGrowth: 0.25,
+      profitMargin: 0.15
     },
     {
       year: 2021,
@@ -29,7 +31,9 @@ export const sampleBusinessData: BusinessData = {
       investmentBudget: 600000,
       marketingBudget: 420000,
       rndBudget: 800000,
-      roi: 0.24
+      roi: 0.24,
+      revenueGrowth: 0.68,
+      profitMargin: 0.20
     },
     {
       year: 2022,
@@ -40,7 +44,9 @@ export const sampleBusinessData: BusinessData = {
       investmentBudget: 1000000,
       marketingBudget: 730000,
       rndBudget: 1400000,
-      roi: 0.31
+      roi: 0.31,
+      revenueGrowth: 0.74,
+      profitMargin: 0.25
     },
     {
       year: 2023,
@@ -51,7 +57,9 @@ export const sampleBusinessData: BusinessData = {
       investmentBudget: 2000000,
       marketingBudget: 1250000,
       rndBudget: 2500000,
-      roi: 0.35
+      roi: 0.35,
+      revenueGrowth: 0.71,
+      profitMargin: 0.30
     }
   ],
   
@@ -64,6 +72,7 @@ export const sampleBusinessData: BusinessData = {
       averageSalary: 85000,
       trainingBudget: 42000,
       employeeSatisfaction: 7.2,
+      remotePercentage: 0.25,
       departmentDistribution: {
         engineering: 16,
         marketing: 4,
@@ -80,6 +89,7 @@ export const sampleBusinessData: BusinessData = {
       averageSalary: 88000,
       trainingBudget: 94000,
       employeeSatisfaction: 7.6,
+      remotePercentage: 0.35,
       departmentDistribution: {
         engineering: 28,
         marketing: 7,
@@ -96,6 +106,7 @@ export const sampleBusinessData: BusinessData = {
       averageSalary: 92000,
       trainingBudget: 180000,
       employeeSatisfaction: 7.1,
+      remotePercentage: 0.55,
       departmentDistribution: {
         engineering: 42,
         marketing: 10,
@@ -112,6 +123,7 @@ export const sampleBusinessData: BusinessData = {
       averageSalary: 95000,
       trainingBudget: 257500,
       employeeSatisfaction: 7.8,
+      remotePercentage: 0.65,
       departmentDistribution: {
         engineering: 58,
         marketing: 15,
@@ -131,6 +143,7 @@ export const sampleBusinessData: BusinessData = {
       technicalDebt: 4,
       securityIncidents: 1,
       uptime: 99.5,
+      recentUpdates: ["Core Platform Launch", "Initial API Development"],
       plannedProjects: ["Mobile App v1", "API Gateway", "Dashboard Redesign"],
       completedProjects: ["Core Platform", "Customer Portal"]
     },
@@ -142,6 +155,7 @@ export const sampleBusinessData: BusinessData = {
       technicalDebt: 5,
       securityIncidents: 2,
       uptime: 99.7,
+      recentUpdates: ["Redis Caching Integration", "Docker Containerization"],
       plannedProjects: ["AI Recommendation Engine", "Microservices Migration", "Mobile App v2"],
       completedProjects: ["Mobile App v1", "API Gateway", "Dashboard Redesign"]
     },
@@ -153,6 +167,7 @@ export const sampleBusinessData: BusinessData = {
       technicalDebt: 7,
       securityIncidents: 1,
       uptime: 99.8,
+      recentUpdates: ["Kubernetes Orchestration", "TensorFlow ML Models"],
       plannedProjects: ["Global CDN", "Blockchain Integration", "Real-time Analytics"],
       completedProjects: ["AI Recommendation Engine", "Microservices Migration", "Mobile App v2"]
     },
@@ -164,6 +179,7 @@ export const sampleBusinessData: BusinessData = {
       technicalDebt: 5,
       securityIncidents: 0,
       uptime: 99.95,
+      recentUpdates: ["GraphQL API Gateway", "Kafka Event Streaming"],
       plannedProjects: ["Edge Computing Solution", "ML Platform v2", "IoT Integration"],
       completedProjects: ["Global CDN", "Blockchain Integration", "Real-time Analytics"]
     }
@@ -176,6 +192,8 @@ export const sampleBusinessData: BusinessData = {
       conversionRate: 1.8,
       marketShare: 2.3,
       brandAwareness: 4,
+      topPerformingMarket: "Small Business",
+      topPerformingProduct: "Cloud Dashboard",
       activeMarketingCampaigns: ["Product Launch", "Content Marketing"],
       channelPerformance: {
         social: 1.2,
@@ -191,6 +209,8 @@ export const sampleBusinessData: BusinessData = {
       conversionRate: 2.4,
       marketShare: 3.7,
       brandAwareness: 5.5,
+      topPerformingMarket: "Mid-Market",
+      topPerformingProduct: "Data Integration Platform",
       activeMarketingCampaigns: ["Cloud Migration", "Industry Webinars", "PPC Campaign"],
       channelPerformance: {
         social: 1.7,
@@ -206,6 +226,8 @@ export const sampleBusinessData: BusinessData = {
       conversionRate: 3.2,
       marketShare: 5.4,
       brandAwareness: 6.8,
+      topPerformingMarket: "Enterprise",
+      topPerformingProduct: "AI Analytics Suite",
       activeMarketingCampaigns: ["AI Solutions", "Customer Success Stories", "Partner Program"],
       channelPerformance: {
         social: 2.1,
@@ -221,6 +243,8 @@ export const sampleBusinessData: BusinessData = {
       conversionRate: 3.8,
       marketShare: 7.2,
       brandAwareness: 7.9,
+      topPerformingMarket: "Financial Services",
+      topPerformingProduct: "Enterprise AI Platform",
       activeMarketingCampaigns: ["Enterprise Solutions", "Industry Conference", "Thought Leadership", "Account-Based Marketing"],
       channelPerformance: {
         social: 2.4,

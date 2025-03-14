@@ -11,6 +11,9 @@ export interface FinancialData {
   marketingBudget: number;
   rndBudget: number;
   roi: number;
+  // Add missing properties mentioned in errors
+  revenueGrowth?: number;
+  profitMargin?: number;
 }
 
 export interface HRData {
@@ -28,6 +31,8 @@ export interface HRData {
     support: number;
     administration: number;
   };
+  // Add missing properties mentioned in errors
+  remotePercentage?: number;
 }
 
 export interface TechnologyData {
@@ -40,6 +45,8 @@ export interface TechnologyData {
   uptime: number; // percentage
   plannedProjects: string[];
   completedProjects: string[];
+  // Add missing properties mentioned in errors
+  recentUpdates?: string[];
 }
 
 export interface MarketingData {
@@ -56,6 +63,9 @@ export interface MarketingData {
     content: number;
     partnerships: number;
   };
+  // Add missing properties mentioned in errors
+  topPerformingMarket?: string;
+  topPerformingProduct?: string;
 }
 
 export interface StrategicData {
