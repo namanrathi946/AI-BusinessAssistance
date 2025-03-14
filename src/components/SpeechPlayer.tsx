@@ -25,72 +25,85 @@ const SpeechPlayer = ({ text, agent }: SpeechPlayerProps) => {
   
   const handlePlay = () => {
     if ('speechSynthesis' in window) {
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
-      
-      // Create a new utterance
-      const utterance = new SpeechSynthesisUtterance(text);
-      speechSynthRef.current = utterance;
-      
-      // Get available voices
-      const voices = window.speechSynthesis.getVoices();
-      
-      // Set up voice based on agent role
-      if (voices.length > 0) {
-        // Try to find a voice that matches the preferred voice for this agent
-        const preferredVoice = voices.find(voice => 
-          voice.name.includes(voiceMap[agent.role] || '')
-        );
+      try {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
         
-        // Fallback to any voice that matches the agent's role (male/female)
-        const fallbackVoice = voices.find(voice => 
-          agent.role === 'CEO' || agent.role === 'CFO' 
-            ? voice.name.includes('female') || voice.name.includes('Female')
-            : voice.name.includes('male') || voice.name.includes('Male')
-        );
+        // Create a new utterance
+        const utterance = new SpeechSynthesisUtterance(text);
+        speechSynthRef.current = utterance;
         
-        // Set the voice if found, otherwise use default
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
-        } else if (fallbackVoice) {
-          utterance.voice = fallbackVoice;
+        // Get available voices
+        const voices = window.speechSynthesis.getVoices();
+        
+        // Set up voice based on agent role
+        if (voices && voices.length > 0) {
+          // Try to find a voice that matches the preferred voice for this agent
+          const preferredVoice = voices.find(voice => 
+            voice.name.includes(voiceMap[agent.role] || '')
+          );
+          
+          // Fallback to any voice that matches the agent's role (male/female)
+          const fallbackVoice = voices.find(voice => 
+            agent.role === 'CEO' || agent.role === 'CFO' 
+              ? voice.name.includes('female') || voice.name.includes('Female')
+              : voice.name.includes('male') || voice.name.includes('Male')
+          );
+          
+          // Set the voice if found, otherwise use default
+          if (preferredVoice) {
+            utterance.voice = preferredVoice;
+          } else if (fallbackVoice) {
+            utterance.voice = fallbackVoice;
+          }
         }
-      }
-      
-      // Set the rate and pitch slightly based on agent
-      switch (agent.role) {
-        case 'CEO':
-          utterance.rate = 1.0;
-          utterance.pitch = 1.1;
-          break;
-        case 'CTO':
-          utterance.rate = 1.0;
-          utterance.pitch = 0.9;
-          break;
-        case 'CFO':
-          utterance.rate = 0.95;
-          utterance.pitch = 1.0;
-          break;
-        case 'HR':
-          utterance.rate = 1.05;
-          utterance.pitch = 1.0;
-          break;
-      }
-      
-      // Set event handlers
-      utterance.onstart = () => setIsPlaying(true);
-      utterance.onend = () => setIsPlaying(false);
-      utterance.onerror = () => {
-        setIsPlaying(false);
+        
+        // Set the rate and pitch slightly based on agent
+        switch (agent.role) {
+          case 'CEO':
+            utterance.rate = 1.0;
+            utterance.pitch = 1.1;
+            break;
+          case 'CTO':
+            utterance.rate = 1.0;
+            utterance.pitch = 0.9;
+            break;
+          case 'CFO':
+            utterance.rate = 0.95;
+            utterance.pitch = 1.0;
+            break;
+          case 'HR':
+            utterance.rate = 1.05;
+            utterance.pitch = 1.0;
+            break;
+          default:
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+        }
+        
+        // Set event handlers
+        utterance.onstart = () => setIsPlaying(true);
+        utterance.onend = () => setIsPlaying(false);
+        utterance.onerror = (event) => {
+          console.error('Speech synthesis error:', event);
+          setIsPlaying(false);
+          toast({
+            title: "Speech Error",
+            description: "Unable to play speech. Please try again.",
+            variant: "destructive",
+          });
+        };
+        
+        // Play the speech
+        window.speechSynthesis.speak(utterance);
+      } catch (error) {
+        console.error('Speech player error:', error);
         toast({
           title: "Speech Error",
-          description: "Unable to play speech. Please try again.",
+          description: "An error occurred while trying to play speech.",
           variant: "destructive",
         });
-      };
-      
-      // Play the speech
-      window.speechSynthesis.speak(utterance);
+      }
     } else {
       toast({
         title: "Speech Not Supported",

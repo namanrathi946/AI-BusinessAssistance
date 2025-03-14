@@ -46,6 +46,8 @@ const TranscriptPanel = ({ messages, agents, isVisible }: TranscriptPanelProps) 
         {messages.map((message) => {
           const agent = getAgentById(message.agentId);
           
+          if (!agent) return null;
+          
           return (
             <div key={message.id} className="flex items-start gap-3">
               <div 
@@ -67,9 +69,7 @@ const TranscriptPanel = ({ messages, agents, isVisible }: TranscriptPanelProps) 
                   <span className="text-xs text-muted-foreground">
                     {formatTimestamp(message.timestamp)}
                   </span>
-                  {agent && (
-                    <SpeechPlayer text={message.text} agent={agent} />
-                  )}
+                  <SpeechPlayer text={message.text} agent={agent} />
                 </div>
                 <p className="text-sm mt-1">{message.text}</p>
               </div>
