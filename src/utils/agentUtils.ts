@@ -55,13 +55,19 @@ export const getInitialMessages = (): Message[] => [
 // OpenAI integration for generating contextually relevant responses
 const OPENAI_API_KEY = "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";
 
+// Define the return type for the generatePrompt function
+interface PromptData {
+  systemPrompt: string;
+  userPrompt: string;
+}
+
 // Generate a prompt for the AI based on the agent role, business data, and discussion topic
 const generatePrompt = (
   agent: Agent, 
   businessData: BusinessData,
   previousMessages: Message[],
   topic: string = ''
-): string => {
+): PromptData => {
   const insights = generateRoleInsights(agent.role, businessData);
   
   // Create conversation history for context
@@ -140,7 +146,7 @@ export const generateAgentMessage = async (
 ): Promise<Message> => {
   try {
     // Generate prompt for OpenAI
-    const { systemPrompt, userPrompt } = generatePrompt(agent, businessData, previousMessages, topic);
+    const promptData = generatePrompt(agent, businessData, previousMessages, topic);
     
     // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -152,8 +158,8 @@ export const generateAgentMessage = async (
       body: JSON.stringify({
         model: 'gpt-3.5-turbo',
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          { role: 'system', content: promptData.systemPrompt },
+          { role: 'user', content: promptData.userPrompt }
         ],
         max_tokens: 250,
         temperature: 0.7
