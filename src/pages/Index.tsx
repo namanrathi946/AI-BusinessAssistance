@@ -4,8 +4,10 @@ import TranscriptPanel from '../components/TranscriptPanel';
 import ControlPanel from '../components/ControlPanel';
 import BusinessDataPanel from '../components/BusinessDataPanel';
 import DatasetUploadModal from '../components/DatasetUploadModal';
+import DecisionSummaryCard from '../components/DecisionSummaryCard';
 import { MeetingState, Message, Agent } from '../types';
 import { getDefaultAgents, getInitialMessages, simulateConversation } from '../utils/agentUtils';
+import { exportDecisionSummary } from '../utils/summaryUtils';
 import { toast } from '@/hooks/use-toast';
 import { BusinessData } from '../types/businessData';
 import { sampleBusinessData } from '../data/sampleBusinessData';
@@ -147,11 +149,29 @@ const Index = () => {
     
     toast({
       title: "Meeting Ended",
-      description: "The meeting has been concluded. You can export the transcript.",
+      description: "The meeting has concluded and a summary is being generated.",
       duration: 5000,
     });
     
     // In a real app, we would signal to the backend to stop the agents
+  };
+  
+  // Export summary
+  const handleExportSummary = () => {
+    if (businessData || sampleBusinessData) {
+      exportDecisionSummary(
+        // This would be replaced with the actual summary data from the DecisionSummaryCard
+        null, 
+        businessData || sampleBusinessData,
+        meetingState.discussionTopic || 'Business Performance'
+      );
+      
+      toast({
+        title: "Summary Exported",
+        description: "The decision summary has been downloaded.",
+        duration: 3000,
+      });
+    }
   };
   
   // Export chat transcript
@@ -219,7 +239,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <header className="glass-panel mb-6 p-4 flex justify-between items-center animate-fade-in">
+      <header className="glass-panel mb-6 p-4 flex justify-between items-center animate-fade-in hover-glow">
         <div>
           <h1 className="text-2xl font-bold">{businessData?.companyName || 'Executive Meeting'}</h1>
           <p className="text-muted-foreground">
@@ -250,14 +270,27 @@ const Index = () => {
           onToggleVisibility={handleToggleBusinessData}
         />
         
-        {/* Meeting grid */}
-        <div className="flex-1">
-          <MeetingGrid 
-            agents={meetingState.agents}
+        {/* Show Decision Summary Card if meeting has ended */}
+        {meetingState.status === 'ended' && (
+          <DecisionSummaryCard
             messages={meetingState.messages}
-            currentSpeaker={meetingState.currentSpeaker}
+            agents={meetingState.agents}
+            businessData={businessData || sampleBusinessData}
+            discussionTopic={meetingState.discussionTopic}
+            onExport={handleExportSummary}
           />
-        </div>
+        )}
+        
+        {/* Meeting grid (hidden when meeting has ended and summary is showing) */}
+        {meetingState.status !== 'ended' && (
+          <div className="flex-1">
+            <MeetingGrid 
+              agents={meetingState.agents}
+              messages={meetingState.messages}
+              currentSpeaker={meetingState.currentSpeaker}
+            />
+          </div>
+        )}
         
         {/* Transcript panel (conditionally displayed) */}
         {meetingState.transcriptVisible && (

@@ -24,7 +24,11 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
       {agents.map((agent) => (
         <div 
           key={agent.id}
-          className={`transition-all duration-500 ${agent.id === currentSpeaker ? 'scale-102 z-10' : 'scale-100'}`}
+          className={`transition-all duration-500 hover-glow ${
+            agent.id === currentSpeaker 
+              ? 'scale-102 z-10 ring-2 ring-offset-2 ring-offset-background ring-meeting-blue/30' 
+              : 'scale-100 hover:scale-101'
+          }`}
         >
           <AvatarPanel
             agent={agent}
