@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import { Message, Agent } from '../types';
 import { formatTimestamp } from '../utils/agentUtils';
 import { cn } from '@/lib/utils';
+import SpeechPlayer from './SpeechPlayer';
 
 interface TranscriptPanelProps {
   messages: Message[];
@@ -66,6 +67,9 @@ const TranscriptPanel = ({ messages, agents, isVisible }: TranscriptPanelProps) 
                   <span className="text-xs text-muted-foreground">
                     {formatTimestamp(message.timestamp)}
                   </span>
+                  {agent && (
+                    <SpeechPlayer text={message.text} agent={agent} />
+                  )}
                 </div>
                 <p className="text-sm mt-1">{message.text}</p>
               </div>

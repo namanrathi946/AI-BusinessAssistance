@@ -3,6 +3,7 @@ import React from 'react';
 import { Agent } from '../types';
 import { cn } from '@/lib/utils';
 import AvatarAnimation from './AvatarAnimation';
+import SpeechPlayer from './SpeechPlayer';
 
 interface AvatarPanelProps {
   agent: Agent;
@@ -48,7 +49,10 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage }: AvatarPanelProps)
       {isCurrentSpeaker && lastMessage && (
         <div className="mt-auto w-full">
           <div className="message-bubble incoming mt-4 animate-pulse-once transition-all duration-300">
-            <p className="text-sm">{lastMessage}</p>
+            <div className="flex justify-between items-start">
+              <p className="text-sm flex-1 pr-2">{lastMessage}</p>
+              {lastMessage && <SpeechPlayer text={lastMessage} agent={agent} />}
+            </div>
           </div>
         </div>
       )}
