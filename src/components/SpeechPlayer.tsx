@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 interface SpeechPlayerProps {
   text: string;
   agent: Agent;
+  autoPlay?: boolean;
 }
 
 // Map of agent roles to voice IDs (using standard browser voices initially)
@@ -18,12 +19,13 @@ const voiceMap: Record<string, string> = {
   'HR': 'en-US-GuyNeural', // Male voice
 };
 
-const SpeechPlayer = ({ text, agent }: SpeechPlayerProps) => {
+const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
   const { toast } = useToast();
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const availableVoicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const previousTextRef = useRef<string>('');
   
   // Load voices when component mounts
   useEffect(() => {
@@ -51,6 +53,15 @@ const SpeechPlayer = ({ text, agent }: SpeechPlayerProps) => {
       }
     };
   }, []);
+
+  // Auto-play speech when text or agent changes
+  useEffect(() => {
+    // Only auto-play if the text has changed and is not empty
+    if (autoPlay && text && text !== previousTextRef.current && voicesLoaded) {
+      previousTextRef.current = text;
+      handlePlay();
+    }
+  }, [text, agent, voicesLoaded, autoPlay]);
 
   // Ensure any ongoing speech is cancelled when component unmounts
   useEffect(() => {
