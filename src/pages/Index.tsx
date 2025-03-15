@@ -17,6 +17,8 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Mic, MicOff } from 'lucide-react';
+import { startSpeechRecognition, isSpeechRecognitionSupported } from '../utils/speechRecognitionUtils';
 
 const Index = () => {
   // Initialize meeting state
@@ -40,6 +42,8 @@ const Index = () => {
   // Start discussion dialog state
   const [isStartDiscussionDialogOpen, setIsStartDiscussionDialogOpen] = useState(false);
   const [discussionTopic, setDiscussionTopic] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [temporaryTranscript, setTemporaryTranscript] = useState('');
   
   // Start the meeting simulation
   const startDiscussion = (topic: string = '') => {
@@ -236,6 +240,63 @@ const Index = () => {
     startDiscussion(discussionTopic);
   };
   
+  // Toggle voice recognition
+  const toggleVoiceRecognition = () => {
+    if (isListening) {
+      // If already listening, stop
+      setIsListening(false);
+      return;
+    }
+    
+    // Check if speech recognition is supported
+    if (!isSpeechRecognitionSupported()) {
+      toast({
+        title: "Speech Recognition Not Supported",
+        description: "Your browser doesn't support voice input. Please use a modern browser like Chrome.",
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
+    }
+    
+    // Start listening
+    setIsListening(true);
+    setTemporaryTranscript('Listening...');
+    
+    const stopListening = startSpeechRecognition(
+      (text, isFinal) => {
+        if (isFinal) {
+          setDiscussionTopic(text);
+          setTemporaryTranscript('');
+          setIsListening(false);
+          
+          toast({
+            title: "Voice Input Received",
+            description: "Topic has been set from your voice input.",
+            duration: 3000,
+          });
+        } else {
+          setTemporaryTranscript(text);
+        }
+      },
+      { interimResults: true }
+    );
+    
+    // Clean up function (will be called when component unmounts or when isListening changes)
+    return () => {
+      stopListening();
+      setIsListening(false);
+    };
+  };
+  
+  // Effect to handle cleanup when dialog closes
+  useEffect(() => {
+    if (!isStartDiscussionDialogOpen) {
+      setIsListening(false);
+      setTemporaryTranscript('');
+    }
+  }, [isStartDiscussionDialogOpen]);
+  
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -331,13 +392,36 @@ const Index = () => {
             <AlertDialogTitle>Start Boardroom Discussion</AlertDialogTitle>
             <AlertDialogDescription>
               Provide a topic for the executive team to discuss, or leave blank for a general business review.
+              {isSpeechRecognitionSupported() && " You can also use voice input by clicking the microphone button."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           
           <form onSubmit={handleStartDiscussionSubmit}>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="topic">Discussion Topic (Optional)</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="topic">Discussion Topic (Optional)</Label>
+                  
+                  {isSpeechRecognitionSupported() && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={toggleVoiceRecognition}
+                      className={`px-3 transition-colors ${isListening ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700' : ''}`}
+                    >
+                      {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                      <span className="ml-2">{isListening ? 'Stop' : 'Voice Input'}</span>
+                    </Button>
+                  )}
+                </div>
+                
+                {isListening && temporaryTranscript && (
+                  <div className="text-sm italic text-muted-foreground mb-2 p-2 border border-dashed rounded bg-muted/40">
+                    {temporaryTranscript}
+                  </div>
+                )}
+                
                 <Input 
                   id="topic" 
                   placeholder="e.g., 'Q3 Budget Planning' or 'New Product Launch Strategy'" 
