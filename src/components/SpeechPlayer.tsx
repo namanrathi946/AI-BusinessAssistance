@@ -64,38 +64,61 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const availableVoicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const previousTextRef = useRef<string>('');
+  const isMounted = useRef(true);
+  
+  // Check if speech synthesis is supported
+  const isSpeechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
   
   // Load voices when component mounts
   useEffect(() => {
+    // Set the mounted flag
+    isMounted.current = true;
+    
     // Function to get and store available voices
     const loadVoices = () => {
-      const voices = window.speechSynthesis?.getVoices() || [];
-      if (voices.length > 0) {
-        availableVoicesRef.current = voices;
-        setVoicesLoaded(true);
+      if (!isSpeechSupported || !isMounted.current) return;
+      
+      try {
+        const voices = window.speechSynthesis?.getVoices() || [];
+        if (voices.length > 0) {
+          availableVoicesRef.current = voices;
+          setVoicesLoaded(true);
+          console.log(`Loaded ${voices.length} voices`);
+        } else {
+          console.log('No voices available yet, will retry');
+          // If no voices available yet, try again after a delay
+          setTimeout(loadVoices, 500);
+        }
+      } catch (error) {
+        console.error('Error loading voices:', error);
       }
     };
 
     // Load voices initially
-    loadVoices();
-
-    // Set up event listener for when voices change/become available
-    if ('speechSynthesis' in window) {
+    if (isSpeechSupported) {
+      loadVoices();
+      
+      // Ensure any ongoing speech is cancelled when the component mounts
+      window.speechSynthesis.cancel();
+      
+      // Set up event listener for when voices change/become available
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
 
-    // Clean up event listener
+    // Clean up event listener and cancel any speech on unmount
     return () => {
-      if ('speechSynthesis' in window) {
+      isMounted.current = false;
+      if (isSpeechSupported) {
         window.speechSynthesis.onvoiceschanged = null;
+        window.speechSynthesis.cancel();
       }
     };
   }, []);
 
   // Auto-play speech when text or agent changes
   useEffect(() => {
-    // Only auto-play if the text has changed and is not empty
-    if (autoPlay && text && text !== previousTextRef.current && voicesLoaded) {
+    // Only auto-play if the text has changed, is not empty, and voices are loaded
+    if (autoPlay && text && text !== previousTextRef.current && voicesLoaded && isSpeechSupported) {
       previousTextRef.current = text;
       handlePlay();
     }
@@ -104,7 +127,7 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
   // Ensure any ongoing speech is cancelled when component unmounts
   useEffect(() => {
     return () => {
-      if ('speechSynthesis' in window) {
+      if (isSpeechSupported) {
         window.speechSynthesis.cancel();
       }
     };
@@ -133,7 +156,7 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
   };
   
   const handlePlay = () => {
-    if (!('speechSynthesis' in window)) {
+    if (!isSpeechSupported) {
       toast({
         title: "Speech Not Supported",
         description: "Text-to-speech is not supported in your browser.",
@@ -145,6 +168,12 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
     try {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      
+      // If no text to speak, just return
+      if (!text || text.trim() === '') {
+        return;
+      }
       
       // Create a new utterance with humanized text
       const humanizedText = humanizeText(text, agent.role);
@@ -174,6 +203,9 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
           voice.lang.startsWith('en-')
         );
         
+        // Final fallback - use the first available voice
+        const finalFallbackVoice = voices[0];
+        
         // Set the voice if found, otherwise use default
         if (preferredVoice) {
           utterance.voice = preferredVoice;
@@ -181,6 +213,8 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
           utterance.voice = fallbackVoice;
         } else if (lastResortVoice) {
           utterance.voice = lastResortVoice;
+        } else if (finalFallbackVoice) {
+          utterance.voice = finalFallbackVoice;
         }
       }
       
@@ -200,22 +234,35 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
       }
       
       // Set event handlers
-      utterance.onstart = () => setIsPlaying(true);
-      utterance.onend = () => setIsPlaying(false);
+      utterance.onstart = () => {
+        if (isMounted.current) {
+          setIsPlaying(true);
+        }
+      };
+      
+      utterance.onend = () => {
+        if (isMounted.current) {
+          setIsPlaying(false);
+        }
+      };
+      
       utterance.onerror = (event) => {
         console.error('Speech synthesis error:', event);
-        setIsPlaying(false);
-        toast({
-          title: "Speech Error",
-          description: "Unable to play speech. Please try again.",
-          variant: "destructive",
-        });
+        if (isMounted.current) {
+          setIsPlaying(false);
+          toast({
+            title: "Speech Issue",
+            description: "Voice had trouble playing. Try toggling again.",
+            variant: "destructive",
+          });
+        }
       };
       
       // Play the speech
       window.speechSynthesis.speak(utterance);
     } catch (error) {
       console.error('Speech player error:', error);
+      setIsPlaying(false);
       toast({
         title: "Speech Error",
         description: "An error occurred while trying to play speech.",
@@ -225,9 +272,17 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
   };
   
   const handleStop = () => {
-    if ('speechSynthesis' in window) {
+    if (isSpeechSupported) {
       window.speechSynthesis.cancel();
       setIsPlaying(false);
+    }
+  };
+  
+  const handleToggle = () => {
+    if (isPlaying) {
+      handleStop();
+    } else {
+      handlePlay();
     }
   };
   
@@ -236,8 +291,9 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
       variant="ghost" 
       size="icon" 
       className="h-8 w-8 rounded-full hover:bg-primary/20 transition-all"
-      onClick={isPlaying ? handleStop : handlePlay}
+      onClick={handleToggle}
       title={isPlaying ? "Stop Speaking" : "Play Message"}
+      type="button"
     >
       {isPlaying ? (
         <VolumeX className="h-4 w-4" />

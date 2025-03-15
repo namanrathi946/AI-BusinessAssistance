@@ -51,7 +51,7 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage }: AvatarPanelProps)
           <div className="message-bubble incoming mt-4 animate-pulse-once transition-all duration-300">
             <div className="flex justify-between items-start">
               <p className="text-sm flex-1 pr-2">{lastMessage}</p>
-              {lastMessage && agent && <SpeechPlayer text={lastMessage} agent={agent} />}
+              {lastMessage && <SpeechPlayer text={lastMessage} agent={agent} />}
             </div>
           </div>
         </div>
