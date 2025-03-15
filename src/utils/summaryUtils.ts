@@ -1,5 +1,6 @@
+
 import { Agent, Message } from '../types';
-import { BusinessData } from '../types/businessData';
+import { BusinessData, FinancialData, HRData } from '../types/businessData';
 
 /**
  * Extracts key decisions from the meeting messages
@@ -49,9 +50,9 @@ export const generateMeetingSummary = (
 ): string => {
   const companyName = businessData.companyName || 'the company';
   
-  // Get the latest financial and HR data safely
-  const latestFinancialData = businessData.financialData.slice(-1)[0] || {};
-  const latestHrData = businessData.hrData.slice(-1)[0] || {};
+  // Get the latest financial and HR data safely with proper typing
+  const latestFinancialData: Partial<FinancialData> = businessData.financialData.slice(-1)[0] || {};
+  const latestHrData: Partial<HRData> = businessData.hrData.slice(-1)[0] || {};
   
   // Extract what appears to be decisions from the meeting
   const decisions = extractDecisions(messages, agents);
