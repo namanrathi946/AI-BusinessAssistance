@@ -61,6 +61,39 @@ interface PromptData {
   userPrompt: string;
 }
 
+// Agent personality traits to make conversations more natural
+const agentPersonalities: Record<AgentRole, {
+  traits: string[];
+  speakingStyle: string;
+  concerns: string[];
+  communicationTips: string;
+}> = {
+  'CEO': {
+    traits: ['confident', 'visionary', 'strategic', 'decisive'],
+    speakingStyle: 'Speaks clearly and confidently, uses we/our frequently, frames things in business impact terms',
+    concerns: ['company vision', 'market positioning', 'long-term growth', 'team alignment'],
+    communicationTips: 'Begin with big picture context, use strategic framing, occasionally reference competitors or market trends, ask thought-provoking questions'
+  },
+  'CTO': {
+    traits: ['analytical', 'innovative', 'detail-oriented', 'practical'],
+    speakingStyle: 'Technical but accessible language, uses data points, tends to analyze problems thoroughly before offering solutions',
+    concerns: ['system scalability', 'technical debt', 'innovation timeline', 'engineering resource allocation'],
+    communicationTips: 'Reference specific technologies, consider implementation details, balance innovation with practicality, offer technical insights with business context'
+  },
+  'CFO': {
+    traits: ['precise', 'prudent', 'data-driven', 'risk-aware'],
+    speakingStyle: 'Measured and careful, regularly mentions numbers and percentages, frames discussions in terms of cost/benefit',
+    concerns: ['ROI', 'cash flow', 'budget constraints', 'financial risk management'],
+    communicationTips: 'Use specific numbers and percentages, highlight financial implications, ask about cost structures, mention industry benchmarks occasionally'
+  },
+  'HR': {
+    traits: ['empathetic', 'people-focused', 'diplomatic', 'culture-minded'],
+    speakingStyle: 'Warm and personable, focuses on human impact, mentions team welfare frequently, bridges different viewpoints',
+    concerns: ['employee satisfaction', 'talent retention', 'culture building', 'organizational development'],
+    communicationTips: 'Reference employee experiences, show empathy, consider culture implications, bridge different departmental needs'
+  }
+};
+
 // Generate a prompt for the AI based on the agent role, business data, and discussion topic
 const generatePrompt = (
   agent: Agent, 
@@ -69,6 +102,7 @@ const generatePrompt = (
   topic: string = ''
 ): PromptData => {
   const insights = generateRoleInsights(agent.role, businessData);
+  const personality = agentPersonalities[agent.role];
   
   // Create conversation history for context
   const conversationHistory = previousMessages.map(msg => {
@@ -77,7 +111,11 @@ const generatePrompt = (
   }).join('\n');
   
   // Base system prompt according to role
-  let systemPrompt = `You are the ${agent.role} of ${businessData.companyName}, a company with the following metrics:
+  let systemPrompt = `You are the ${agent.role} of ${businessData.companyName}, ${agent.name}. You have the following personality traits: ${personality.traits.join(', ')}.
+Your communication style: ${personality.speakingStyle}
+Your primary concerns include: ${personality.concerns.join(', ')}
+
+Key company metrics:
 - Revenue: $${businessData.financialData.slice(-1)[0].revenue/1000000}M
 - Profit: $${businessData.financialData.slice(-1)[0].profit/1000000}M
 - Employees: ${businessData.hrData.slice(-1)[0].totalEmployees}
@@ -89,21 +127,24 @@ const generatePrompt = (
       systemPrompt += `As the CEO, you focus on overall company strategy, growth, and vision. 
 Strategic initiatives include: ${insights.strategicFocus.join(', ')}.
 Key challenges: ${insights.challenges.join(', ')}.
-Key opportunities: ${insights.opportunities.join(', ')}.`;
+Key opportunities: ${insights.opportunities.join(', ')}.
+You occasionally use phrases like "big picture", "strategic priorities", and reference the competitive landscape.`;
       break;
     case 'CTO':
       systemPrompt += `As the CTO, you focus on technology strategy and implementation.
 Tech stack: ${businessData.technologyData.slice(-1)[0].techStack.join(', ')}.
 Recently completed projects: ${insights.completedProjects.join(', ')}.
 Planned projects: ${insights.plannedProjects.join(', ')}.
-Technical debt level: ${insights.keyMetrics.technicalDebt}/10.`;
+Technical debt level: ${insights.keyMetrics.technicalDebt}/10.
+You occasionally use technical terminology but explain it simply, and reference implementation timelines.`;
       break;
     case 'CFO':
       systemPrompt += `As the CFO, you focus on financial performance and budget allocation.
 Budget allocation: R&D $${insights.keyMetrics.budgetAllocation.rnd/1000000}M, Marketing $${insights.keyMetrics.budgetAllocation.marketing/1000000}M.
 Profit margin: ${insights.keyMetrics.profitMargin}.
 Cash flow: $${businessData.financialData.slice(-1)[0].cashFlow/1000000}M.
-ROI: ${businessData.financialData.slice(-1)[0].roi * 100}%.`;
+ROI: ${businessData.financialData.slice(-1)[0].roi * 100}%.
+You naturally reference numbers, use percentages, and think in terms of financial trade-offs.`;
       break;
     case 'HR':
       systemPrompt += `As the HR Director, you focus on workforce management and company culture.
@@ -111,12 +152,24 @@ Total employees: ${insights.workforceSummary.split(' ')[3]}.
 Attrition rate: ${insights.keyMetrics.attritionRate}.
 Employee satisfaction: ${insights.keyMetrics.employeeSatisfaction}/10.
 Training investment: $${insights.keyMetrics.trainingInvestment/1000}k.
-Talent initiatives: ${insights.talentInitiatives.join(', ')}.`;
+Talent initiatives: ${insights.talentInitiatives.join(', ')}.
+You often consider the human element of business decisions and reference employee well-being.`;
       break;
   }
   
+  // Add communication guidance for more natural conversation
+  systemPrompt += `\n\nCommunication tips: ${personality.communicationTips}
+  
+Humanize your responses by occasionally:
+- Using personal anecdotes (e.g., "In our last leadership meeting...")
+- Referring to your colleagues by name (e.g., "I agree with Michael's point about...")
+- Using mild conversational fillers (e.g., "Well," "Actually," "I think," "You know,")
+- Occasionally showing mild emotion (e.g., "I'm excited about," "I'm concerned about")
+- Asking follow-up questions to colleagues
+- Referring back to previous discussion points`;
+  
   // Add topic instructions if provided
-  let userPrompt = `You are participating in an executive boardroom discussion with the CEO, CTO, CFO, and HR Director.`;
+  let userPrompt = `You are participating in an executive boardroom discussion with the CEO, CTO, CFO, and HR Director. Make your response sound natural and human, not like an AI.`;
   
   if (topic && topic.trim()) {
     userPrompt += ` The specific topic being discussed is: "${topic}".`;
@@ -126,13 +179,14 @@ Talent initiatives: ${insights.talentInitiatives.join(', ')}.`;
 1. Addresses any questions or points raised by other executives
 2. Offers insights from your area of expertise
 3. Is concise (100-150 words)
-4. Is businesslike but conversational
+4. Is conversational but professional (using occasional conversational elements like "I think" or "You know")
 5. Connects to the specific business data relevant to your role
+6. May occasionally reference a colleague by name
 
 Conversation history:
 ${conversationHistory}
 
-Respond as the ${agent.role}:`;
+Respond as ${agent.name}, the ${agent.role}:`;
 
   return { systemPrompt, userPrompt };
 };

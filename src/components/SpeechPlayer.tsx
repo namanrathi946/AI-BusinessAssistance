@@ -19,6 +19,44 @@ const voiceMap: Record<string, string> = {
   'HR': 'en-US-GuyNeural', // Male voice
 };
 
+// Personality traits to make voices more distinct and human-like
+const personalityTraits: Record<string, {
+  rate: number;
+  pitch: number;
+  pitchVariation: number;
+  pauseFrequency: number;
+  emphasisWords: string[];
+}> = {
+  'CEO': {
+    rate: 1.05,  // Slightly faster (confident)
+    pitch: 1.1,
+    pitchVariation: 0.1,
+    pauseFrequency: 0.2,
+    emphasisWords: ['strategy', 'growth', 'vision', 'objectives', 'performance', 'leadership']
+  },
+  'CTO': {
+    rate: 0.98,  // Slightly slower (thoughtful)
+    pitch: 0.95,
+    pitchVariation: 0.08,
+    pauseFrequency: 0.15,
+    emphasisWords: ['technology', 'infrastructure', 'development', 'architecture', 'innovation', 'technical']
+  },
+  'CFO': {
+    rate: 0.97,  // Measured pace (precise)
+    pitch: 1.03,
+    pitchVariation: 0.05,
+    pauseFrequency: 0.25,
+    emphasisWords: ['revenue', 'profit', 'cost', 'budget', 'financial', 'investment', 'forecast']
+  },
+  'HR': {
+    rate: 1.02,  // Friendly pace
+    pitch: 1.0,
+    pitchVariation: 0.12,
+    pauseFrequency: 0.3,
+    emphasisWords: ['team', 'culture', 'talent', 'hiring', 'employee', 'satisfaction', 'retention']
+  }
+};
+
 const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
@@ -72,6 +110,28 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
     };
   }, []);
   
+  // Add natural pauses and emphasis to text for more human-like speech
+  const humanizeText = (text: string, role: string): string => {
+    const traits = personalityTraits[role];
+    if (!traits) return text;
+    
+    // Add occasional commas to create natural pauses
+    let humanizedText = text;
+    
+    // Emphasize key words based on role
+    traits.emphasisWords.forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      humanizedText = humanizedText.replace(regex, `, ${word},`);
+    });
+    
+    // Clean up excessive commas
+    humanizedText = humanizedText
+      .replace(/,\s*,/g, ',')
+      .replace(/,\s*\./g, '.');
+    
+    return humanizedText;
+  };
+  
   const handlePlay = () => {
     if (!('speechSynthesis' in window)) {
       toast({
@@ -86,8 +146,9 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
-      // Create a new utterance
-      const utterance = new SpeechSynthesisUtterance(text);
+      // Create a new utterance with humanized text
+      const humanizedText = humanizeText(text, agent.role);
+      const utterance = new SpeechSynthesisUtterance(humanizedText);
       speechSynthRef.current = utterance;
       
       // Set up voice based on agent role
@@ -123,27 +184,19 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
         }
       }
       
-      // Set the rate and pitch slightly based on agent
-      switch (agent.role) {
-        case 'CEO':
-          utterance.rate = 1.0;
-          utterance.pitch = 1.1;
-          break;
-        case 'CTO':
-          utterance.rate = 1.0;
-          utterance.pitch = 0.9;
-          break;
-        case 'CFO':
-          utterance.rate = 0.95;
-          utterance.pitch = 1.0;
-          break;
-        case 'HR':
-          utterance.rate = 1.05;
-          utterance.pitch = 1.0;
-          break;
-        default:
-          utterance.rate = 1.0;
-          utterance.pitch = 1.0;
+      // Apply personality traits
+      const traits = personalityTraits[agent.role];
+      if (traits) {
+        // Add slight randomness to rate and pitch for more natural speech
+        const randomRateVariation = (Math.random() * 0.06) - 0.03; // -0.03 to +0.03
+        const randomPitchVariation = (Math.random() * traits.pitchVariation) - (traits.pitchVariation / 2);
+        
+        utterance.rate = traits.rate + randomRateVariation;
+        utterance.pitch = traits.pitch + randomPitchVariation;
+      } else {
+        // Default values with slight randomness
+        utterance.rate = 1.0 + ((Math.random() * 0.1) - 0.05);
+        utterance.pitch = 1.0 + ((Math.random() * 0.1) - 0.05);
       }
       
       // Set event handlers
