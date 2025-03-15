@@ -45,6 +45,9 @@ const Index = () => {
   const [isListening, setIsListening] = useState(false);
   const [temporaryTranscript, setTemporaryTranscript] = useState('');
   
+  // New state for user chat messages
+  const [userMessages, setUserMessages] = useState<Message[]>([]);
+  
   // Start the meeting simulation
   const startDiscussion = (topic: string = '') => {
     // Set meeting status to active
@@ -297,6 +300,37 @@ const Index = () => {
     }
   }, [isStartDiscussionDialogOpen]);
   
+  // Handle sending chat messages from the user
+  const handleSendChatMessage = (text: string) => {
+    // Create a new message object
+    const newMessage: Message = {
+      id: `user-message-${Date.now()}`,
+      agentId: 'user', // Special ID for user messages
+      text,
+      timestamp: new Date(),
+      sentiment: 'neutral',
+      entities: [],
+      keywords: []
+    };
+    
+    // Add to user messages
+    setUserMessages(prev => [...prev, newMessage]);
+    
+    // Add to all messages for transcript
+    setMeetingState(prev => ({
+      ...prev,
+      messages: [...prev.messages, newMessage]
+    }));
+    
+    // In a real app, we'd send this message to the AI agents to process
+    // For now, we'll just add it to the transcript
+    toast({
+      title: "Message Sent",
+      description: "Your message has been added to the discussion transcript.",
+      duration: 3000,
+    });
+  };
+  
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -375,6 +409,7 @@ const Index = () => {
           onUploadDataset={() => setIsDatasetModalOpen(true)}
           onStartDiscussion={handleOpenStartDiscussionDialog}
           hasBusinessData={!!businessData}
+          onSendChatMessage={handleSendChatMessage}
         />
       </main>
       

@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { MeetingState } from '../types';
-import { MessageSquare, Download, PauseCircle, PlayCircle, PhoneOff, BarChart2, Database, Play, Users } from 'lucide-react';
+import { MessageSquare, Download, PauseCircle, PlayCircle, PhoneOff, BarChart2, Database, Play, Users, Mic } from 'lucide-react';
+import ChatPromptBox from './ChatPromptBox';
+import { toast } from '@/hooks/use-toast';
+import { isSpeechRecognitionSupported } from '../utils/speechRecognitionUtils';
 
 interface ControlPanelProps {
   onToggleTranscript: () => void;
@@ -16,6 +19,7 @@ interface ControlPanelProps {
   onUploadDataset?: () => void;
   onStartDiscussion?: () => void;
   hasBusinessData?: boolean;
+  onSendChatMessage?: (message: string) => void;
 }
 
 const ControlPanel = ({
@@ -29,10 +33,30 @@ const ControlPanel = ({
   onEndMeeting,
   onUploadDataset,
   onStartDiscussion,
-  hasBusinessData = false
+  hasBusinessData = false,
+  onSendChatMessage
 }: ControlPanelProps) => {
   const isActive = meetingStatus === 'active';
   const isMeetingOngoing = meetingStatus === 'active' || meetingStatus === 'paused';
+  const [showChatPrompt, setShowChatPrompt] = useState(false);
+  
+  const handleSendChatMessage = (message: string) => {
+    if (onSendChatMessage) {
+      onSendChatMessage(message);
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent to the discussion.",
+        duration: 2000,
+      });
+    } else {
+      toast({
+        title: "Not Implemented",
+        description: "Chat functionality is not fully implemented yet.",
+        duration: 3000,
+      });
+    }
+    setShowChatPrompt(false);
+  };
   
   return (
     <div className="glass-panel p-4 flex flex-wrap justify-between items-center gap-2 animate-fade-in hover:shadow-lg transition-all duration-300">
@@ -68,6 +92,18 @@ const ControlPanel = ({
           >
             <Database className="h-4 w-4 mr-2" />
             Upload Business Data
+          </Button>
+        )}
+
+        {isMeetingOngoing && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowChatPrompt(prev => !prev)}
+            className={`transition-all duration-200 hover:scale-105 ${showChatPrompt ? 'bg-secondary/50 border-primary/30' : ''}`}
+          >
+            <Mic className="h-4 w-4 mr-2" />
+            {showChatPrompt ? 'Hide Chat' : 'Send Message'}
           </Button>
         )}
 
@@ -127,6 +163,17 @@ const ControlPanel = ({
           End Meeting
         </Button>
       </div>
+      
+      {/* Chat Prompt Overlay */}
+      {showChatPrompt && (
+        <div className="absolute bottom-20 right-4 left-4 md:left-auto md:w-80 z-10">
+          <ChatPromptBox 
+            onSend={handleSendChatMessage} 
+            onClose={() => setShowChatPrompt(false)}
+            placeholder="Type your message or use voice input..."
+          />
+        </div>
+      )}
     </div>
   );
 };

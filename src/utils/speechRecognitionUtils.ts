@@ -66,3 +66,55 @@ export const startSpeechRecognition = (
     recognition.stop();
   };
 };
+
+// Initialize speech recognition system with a simpler API
+export const useSpeechInput = () => {
+  let cleanupFunction: (() => void) | null = null;
+  
+  const startListening = (
+    onTextUpdate: (text: string) => void,
+    onFinalText: (text: string) => void
+  ) => {
+    // Clean up previous instance if any
+    if (cleanupFunction) {
+      cleanupFunction();
+    }
+    
+    cleanupFunction = startSpeechRecognition(
+      (text, isFinal) => {
+        // Always update with the latest text
+        onTextUpdate(text);
+        
+        // Only call the final callback when recognition is complete
+        if (isFinal) {
+          onFinalText(text);
+          if (cleanupFunction) {
+            cleanupFunction();
+            cleanupFunction = null;
+          }
+        }
+      },
+      { interimResults: true }
+    );
+    
+    return () => {
+      if (cleanupFunction) {
+        cleanupFunction();
+        cleanupFunction = null;
+      }
+    };
+  };
+  
+  const stopListening = () => {
+    if (cleanupFunction) {
+      cleanupFunction();
+      cleanupFunction = null;
+    }
+  };
+  
+  return {
+    startListening,
+    stopListening,
+    isSupported: isSpeechRecognitionSupported()
+  };
+};
