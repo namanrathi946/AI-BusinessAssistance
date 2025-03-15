@@ -1,4 +1,3 @@
-
 import { Agent, Message } from '../types';
 import { BusinessData } from '../types/businessData';
 
@@ -50,12 +49,21 @@ export const generateMeetingSummary = (
 ): string => {
   const companyName = businessData.companyName || 'the company';
   
-  // Instead of using non-existent properties, use the actual structure from BusinessData
+  // Get the latest financial and HR data safely
   const latestFinancialData = businessData.financialData.slice(-1)[0] || {};
   const latestHrData = businessData.hrData.slice(-1)[0] || {};
   
   // Extract what appears to be decisions from the meeting
   const decisions = extractDecisions(messages, agents);
+  
+  // Safely access the properties with optional chaining and defaults
+  const revenueGrowth = latestFinancialData.revenueGrowth;
+  const hasPositiveGrowth = revenueGrowth !== undefined && revenueGrowth > 0;
+  const formattedGrowth = revenueGrowth !== undefined ? (revenueGrowth * 100).toFixed(1) : '0';
+  
+  const employeeSatisfaction = latestHrData.employeeSatisfaction;
+  const hasGoodSatisfaction = employeeSatisfaction !== undefined && employeeSatisfaction > 7;
+  const satisfactionPercent = employeeSatisfaction !== undefined ? (employeeSatisfaction * 10) : 0;
   
   // Generate a summary - in a real app this would be done with an LLM
   return `
@@ -64,9 +72,9 @@ export const generateMeetingSummary = (
 *Executive Discussion for ${companyName}*
 
 ### Key Points Discussed:
-- Financial Performance: ${latestFinancialData.revenueGrowth && latestFinancialData.revenueGrowth > 0 ? 'Positive' : 'Negative'} revenue trends showing ${latestFinancialData.revenueGrowth ? (latestFinancialData.revenueGrowth * 100).toFixed(1) : 0}% growth
-- Performance indicators across departments show ${latestHrData.employeeSatisfaction > 7 ? 'strong' : 'areas needing improvement'}
-- Employee satisfaction at ${latestHrData.employeeSatisfaction ? latestHrData.employeeSatisfaction * 10 : 0}%
+- Financial Performance: ${hasPositiveGrowth ? 'Positive' : 'Negative'} revenue trends showing ${formattedGrowth}% growth
+- Performance indicators across departments show ${hasGoodSatisfaction ? 'strong' : 'areas needing improvement'}
+- Employee satisfaction at ${satisfactionPercent}%
 
 ### Decisions Made:
 ${decisions.length > 0 
