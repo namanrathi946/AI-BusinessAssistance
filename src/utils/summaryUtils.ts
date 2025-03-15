@@ -49,8 +49,10 @@ export const generateMeetingSummary = (
   topic?: string
 ): string => {
   const companyName = businessData.companyName || 'the company';
-  const financials = businessData.financialMetrics || {};
-  const performance = businessData.performanceData || {};
+  
+  // Instead of using non-existent properties, use the actual structure from BusinessData
+  const latestFinancialData = businessData.financialData.slice(-1)[0] || {};
+  const latestHrData = businessData.hrData.slice(-1)[0] || {};
   
   // Extract what appears to be decisions from the meeting
   const decisions = extractDecisions(messages, agents);
@@ -62,9 +64,9 @@ export const generateMeetingSummary = (
 *Executive Discussion for ${companyName}*
 
 ### Key Points Discussed:
-- Financial Performance: ${financials.revenueGrowth > 0 ? 'Positive' : 'Negative'} revenue trends showing ${financials.revenueGrowth}% growth
-- Performance indicators across departments show ${performance.overallScore > 70 ? 'strong' : 'areas needing improvement'}
-- Employee satisfaction at ${performance.employeeSatisfaction}%
+- Financial Performance: ${latestFinancialData.revenueGrowth && latestFinancialData.revenueGrowth > 0 ? 'Positive' : 'Negative'} revenue trends showing ${latestFinancialData.revenueGrowth ? (latestFinancialData.revenueGrowth * 100).toFixed(1) : 0}% growth
+- Performance indicators across departments show ${latestHrData.employeeSatisfaction > 7 ? 'strong' : 'areas needing improvement'}
+- Employee satisfaction at ${latestHrData.employeeSatisfaction ? latestHrData.employeeSatisfaction * 10 : 0}%
 
 ### Decisions Made:
 ${decisions.length > 0 
