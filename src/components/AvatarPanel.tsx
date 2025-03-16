@@ -30,6 +30,9 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage }: AvatarPanelProps)
     thinking: 'thinking',
   };
   
+  // Don't display anything if this is a user message (though this should be filtered out earlier)
+  if (agent.id === 'user') return null;
+  
   return (
     <div className="glass-panel h-full flex flex-col p-4 animate-fade-in hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
       <div className="flex flex-col items-center space-y-3">

@@ -12,9 +12,9 @@ interface MeetingGridProps {
 const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => {
   // Helper to get the last message for an agent
   const getLastMessageForAgent = (agentId: string): string | undefined => {
-    // Filter out user messages (those with agentId === 'user')
+    // Filter messages to only include agent messages (exclude user messages)
     const agentMessages = messages
-      .filter(msg => msg.agentId === agentId && msg.agentId !== 'user')
+      .filter(msg => msg.agentId === agentId)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
     
     return agentMessages[0]?.text;
