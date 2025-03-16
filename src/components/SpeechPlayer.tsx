@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Volume2, VolumeX } from 'lucide-react';
@@ -57,60 +56,62 @@ const personalityTraits: Record<string, {
   }
 };
 
+// Keep track of voice loading state globally
+let voicesLoaded = false;
+let availableVoices: SpeechSynthesisVoice[] = [];
+
+// Load voices once when module initializes
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  const loadVoices = () => {
+    const voices = window.speechSynthesis.getVoices();
+    if (voices && voices.length > 0) {
+      availableVoices = voices;
+      voicesLoaded = true;
+      console.log(`Loaded ${voices.length} voices`);
+    }
+  };
+  
+  // Load voices initially
+  loadVoices();
+  
+  // Set up event listener for when voices change/become available
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
 const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [voicesLoaded, setVoicesLoaded] = useState(false);
   const { toast } = useToast();
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const availableVoicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const previousTextRef = useRef<string>('');
   const isMounted = useRef(true);
+  const loadFailedRef = useRef(false);
   
   // Check if speech synthesis is supported
   const isSpeechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
   
-  // Load voices when component mounts
+  // Set up cleanup effect
   useEffect(() => {
     // Set the mounted flag
     isMounted.current = true;
     
-    // Function to get and store available voices
-    const loadVoices = () => {
-      if (!isSpeechSupported || !isMounted.current) return;
-      
-      try {
-        const voices = window.speechSynthesis?.getVoices() || [];
-        if (voices.length > 0) {
-          availableVoicesRef.current = voices;
-          setVoicesLoaded(true);
-          console.log(`Loaded ${voices.length} voices`);
-        } else {
-          console.log('No voices available yet, will retry');
-          // If no voices available yet, try again after a delay
-          setTimeout(loadVoices, 500);
-        }
-      } catch (error) {
-        console.error('Error loading voices:', error);
-      }
-    };
-
-    // Load voices initially
+    // Ensure any ongoing speech is cancelled when the component mounts
     if (isSpeechSupported) {
-      loadVoices();
-      
-      // Ensure any ongoing speech is cancelled when the component mounts
-      window.speechSynthesis.cancel();
-      
-      // Set up event listener for when voices change/become available
-      window.speechSynthesis.onvoiceschanged = loadVoices;
+      try {
+        window.speechSynthesis.cancel();
+      } catch (error) {
+        // Silent error - just to prevent issues in some browsers
+      }
     }
 
     // Clean up event listener and cancel any speech on unmount
     return () => {
       isMounted.current = false;
       if (isSpeechSupported) {
-        window.speechSynthesis.onvoiceschanged = null;
-        window.speechSynthesis.cancel();
+        try {
+          window.speechSynthesis.cancel();
+        } catch (error) {
+          // Silent error - just to prevent issues in some browsers
+        }
       }
     };
   }, []);
@@ -118,20 +119,11 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
   // Auto-play speech when text or agent changes
   useEffect(() => {
     // Only auto-play if the text has changed, is not empty, and voices are loaded
-    if (autoPlay && text && text !== previousTextRef.current && voicesLoaded && isSpeechSupported) {
+    if (autoPlay && text && text !== previousTextRef.current && voicesLoaded && isSpeechSupported && !loadFailedRef.current) {
       previousTextRef.current = text;
       handlePlay();
     }
-  }, [text, agent, voicesLoaded, autoPlay]);
-
-  // Ensure any ongoing speech is cancelled when component unmounts
-  useEffect(() => {
-    return () => {
-      if (isSpeechSupported) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
+  }, [text, agent, autoPlay]);
   
   // Add natural pauses and emphasis to text for more human-like speech
   const humanizeText = (text: string, role: string): string => {
@@ -157,12 +149,12 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
   
   const handlePlay = () => {
     if (!isSpeechSupported) {
-      toast({
-        title: "Speech Not Supported",
-        description: "Text-to-speech is not supported in your browser.",
-        variant: "destructive",
-      });
+      // Don't show errors for unsupported browsers, just return silently
       return;
+    }
+
+    if (loadFailedRef.current) {
+      return; // Don't try again if we've already failed
     }
 
     try {
@@ -181,16 +173,14 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
       speechSynthRef.current = utterance;
       
       // Set up voice based on agent role
-      const voices = availableVoicesRef.current;
-      
-      if (voices && voices.length > 0) {
+      if (availableVoices && availableVoices.length > 0) {
         // Try to find a voice that matches the preferred voice for this agent
-        const preferredVoice = voices.find(voice => 
+        const preferredVoice = availableVoices.find(voice => 
           voice.name.includes(voiceMap[agent.role] || '')
         );
         
         // Fallback to a voice based on gender (for CEO/CFO use female, for CTO/HR use male)
-        const fallbackVoice = voices.find(voice => {
+        const fallbackVoice = availableVoices.find(voice => {
           if (agent.role === 'CEO' || agent.role === 'CFO') {
             return voice.name.toLowerCase().includes('female');
           } else {
@@ -199,12 +189,12 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
         });
         
         // Last resort fallback - just use any English voice
-        const lastResortVoice = voices.find(voice => 
+        const lastResortVoice = availableVoices.find(voice => 
           voice.lang.startsWith('en-')
         );
         
         // Final fallback - use the first available voice
-        const finalFallbackVoice = voices[0];
+        const finalFallbackVoice = availableVoices[0];
         
         // Set the voice if found, otherwise use default
         if (preferredVoice) {
@@ -247,34 +237,40 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
       };
       
       utterance.onerror = (event) => {
-        console.error('Speech synthesis error:', event);
         if (isMounted.current) {
           setIsPlaying(false);
-          toast({
-            title: "Speech Issue",
-            description: "Voice had trouble playing. Try toggling again.",
-            variant: "destructive",
-          });
+          
+          // Mark as failed so we don't keep trying
+          loadFailedRef.current = true;
+          
+          // Don't show toast errors for speech synthesis issues to avoid spamming users
+          console.warn('Speech synthesis error - disabling autoplay for this session');
         }
       };
       
-      // Play the speech
-      window.speechSynthesis.speak(utterance);
+      // Wrap speech in try-catch to handle any potential errors
+      try {
+        window.speechSynthesis.speak(utterance);
+      } catch (error) {
+        // If speech fails, silently disable for this session
+        loadFailedRef.current = true;
+        setIsPlaying(false);
+      }
     } catch (error) {
-      console.error('Speech player error:', error);
+      // If any part of the process fails, disable speech for this session
+      loadFailedRef.current = true;
       setIsPlaying(false);
-      toast({
-        title: "Speech Error",
-        description: "An error occurred while trying to play speech.",
-        variant: "destructive",
-      });
     }
   };
   
   const handleStop = () => {
     if (isSpeechSupported) {
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
+      try {
+        window.speechSynthesis.cancel();
+        setIsPlaying(false);
+      } catch (error) {
+        // Silent error - just to prevent issues in some browsers
+      }
     }
   };
   
@@ -285,6 +281,11 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
       handlePlay();
     }
   };
+  
+  // If speech has been marked as failed, don't render the speech button at all
+  if (loadFailedRef.current) {
+    return null;
+  }
   
   return (
     <Button 
