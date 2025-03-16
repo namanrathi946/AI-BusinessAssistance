@@ -306,8 +306,10 @@ const Index = () => {
     const newMessage: Message = {
       id: `user-message-${Date.now()}`,
       agentId: 'user', // Special ID for user messages
+      role: 'CEO', // Default role for user messages
       text,
       timestamp: new Date(),
+      status: 'sent',
       sentiment: 'neutral',
       entities: [],
       keywords: []

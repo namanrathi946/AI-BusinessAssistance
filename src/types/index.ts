@@ -19,6 +19,10 @@ export interface Message {
   text: string;
   timestamp: Date;
   status: 'sending' | 'sent' | 'error';
+  // Add these optional properties to match usage in Index.tsx
+  sentiment?: string;
+  entities?: string[];
+  keywords?: string[];
 }
 
 export interface MeetingState {
