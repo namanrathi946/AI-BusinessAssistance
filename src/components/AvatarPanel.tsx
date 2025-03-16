@@ -3,15 +3,13 @@ import React from 'react';
 import { Agent } from '../types';
 import { cn } from '@/lib/utils';
 import AvatarAnimation from './AvatarAnimation';
-import SpeechPlayer from './SpeechPlayer';
 
 interface AvatarPanelProps {
   agent: Agent;
   isCurrentSpeaker: boolean;
-  lastMessage?: string;
 }
 
-const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage }: AvatarPanelProps) => {
+const AvatarPanel = ({ agent, isCurrentSpeaker }: AvatarPanelProps) => {
   const { role, name, status } = agent;
   
   // Map status to readable text
@@ -47,18 +45,6 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage }: AvatarPanelProps)
           {statusText[status]}
         </span>
       </div>
-      
-      {/* Message bubble that appears when agent is speaking */}
-      {isCurrentSpeaker && lastMessage && (
-        <div className="mt-auto w-full">
-          <div className="message-bubble incoming mt-4 animate-pulse-once transition-all duration-300">
-            <div className="flex justify-between items-start">
-              <p className="text-sm flex-1 pr-2">{lastMessage}</p>
-              {lastMessage && <SpeechPlayer text={lastMessage} agent={agent} />}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

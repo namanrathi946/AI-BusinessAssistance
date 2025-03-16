@@ -10,16 +10,6 @@ interface MeetingGridProps {
 }
 
 const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => {
-  // Helper to get the last message for an agent
-  const getLastMessageForAgent = (agentId: string): string | undefined => {
-    // Filter messages to only include agent messages (exclude user messages)
-    const agentMessages = messages
-      .filter(msg => msg.agentId === agentId)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    
-    return agentMessages[0]?.text;
-  };
-  
   // Filter out the user from the agents list (we only want to show AI agents in the grid)
   const aiAgents = agents.filter(agent => agent.id !== 'user');
   
@@ -37,7 +27,6 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
           <AvatarPanel
             agent={agent}
             isCurrentSpeaker={agent.id === currentSpeaker}
-            lastMessage={getLastMessageForAgent(agent.id)}
           />
         </div>
       ))}
