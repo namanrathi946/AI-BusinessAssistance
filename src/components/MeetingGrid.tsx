@@ -20,9 +20,12 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
     return agentMessages[0]?.text;
   };
   
+  // Filter out the user from the agents list (we only want to show AI agents in the grid)
+  const aiAgents = agents.filter(agent => agent.id !== 'user');
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full animate-fade-in">
-      {agents.map((agent) => (
+      {aiAgents.map((agent) => (
         <div 
           key={agent.id}
           className={`transition-all duration-500 hover-glow ${
