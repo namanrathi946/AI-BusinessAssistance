@@ -44,6 +44,32 @@ const TranscriptPanel = ({ messages, agents, isVisible }: TranscriptPanelProps) 
         className="flex-1 overflow-y-auto pr-2 space-y-4 scroll-smooth"
       >
         {messages.map((message) => {
+          // Special handling for user messages
+          if (message.agentId === 'user') {
+            return (
+              <div key={message.id} className="flex items-start gap-3">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full overflow-hidden bg-secondary/50">
+                  <div className="h-full w-full flex items-center justify-center text-xs font-medium">
+                    You
+                  </div>
+                </div>
+                
+                <div className="flex-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-medium text-primary">
+                      You (Participant)
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatTimestamp(message.timestamp)}
+                    </span>
+                  </div>
+                  <p className="text-sm mt-1">{message.text}</p>
+                </div>
+              </div>
+            );
+          }
+          
+          // Regular agent messages
           const agent = getAgentById(message.agentId);
           
           if (!agent) return null;
