@@ -2,6 +2,7 @@
 import React from 'react';
 import { Agent, Message } from '../types';
 import AvatarPanel from './AvatarPanel';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface MeetingGridProps {
   agents: Agent[];
@@ -28,7 +29,10 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
   // For grid layout (all participants equal size)
   if (useGridLayout) {
     return (
-      <div className="flex flex-col h-full bg-meeting-dark rounded-lg overflow-hidden">
+      <div className="flex flex-col h-full bg-meeting-dark rounded-lg overflow-hidden border border-white/10">
+        <div className="p-2 text-white font-medium text-center border-b border-white/10">
+          AI Agents Video Grid
+        </div>
         {/* Main video grid */}
         <div className="flex-1 p-2 grid grid-cols-2 gap-2 md:grid-cols-2 lg:grid-cols-3">
           {aiAgents.map((agent) => {
@@ -60,11 +64,14 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
   
   // For featured speaker layout (one large video, others small)
   return (
-    <div className="flex flex-col h-full bg-meeting-dark rounded-lg overflow-hidden">
+    <div className="flex flex-col h-full bg-meeting-dark rounded-lg overflow-hidden border border-white/10">
+      <div className="p-2 text-white font-medium text-center border-b border-white/10">
+        AI Agents Video Conference
+      </div>
       {/* Featured speaker */}
       <div className="flex-1 p-2">
         <div className="h-[60%] mb-2">
-          <div className="relative h-full rounded-lg overflow-hidden">
+          <div className="relative h-full rounded-lg overflow-hidden border border-white/10">
             <AvatarPanel
               agent={featuredSpeaker}
               isCurrentSpeaker={featuredSpeaker.id === currentSpeaker}
@@ -85,7 +92,7 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
             return (
               <div 
                 key={agent.id}
-                className={`relative rounded-lg overflow-hidden ${
+                className={`relative rounded-lg overflow-hidden border border-white/10 ${
                   isCurrentSpeaker ? 'ring-2 ring-meeting-green animate-pulse' : ''
                 }`}
               >

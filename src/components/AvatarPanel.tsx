@@ -3,16 +3,17 @@ import React from 'react';
 import { Agent } from '../types';
 import { cn } from '@/lib/utils';
 import AvatarAnimation from './AvatarAnimation';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface AvatarPanelProps {
   agent: Agent;
   isCurrentSpeaker: boolean;
-  lastMessage?: string; // Added lastMessage as an optional prop
-  showVideoStyle?: boolean; // New prop to toggle video conference style
+  lastMessage?: string; // Optional prop for displaying the last message
+  showVideoStyle?: boolean; // Prop to toggle video conference style
 }
 
 const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage, showVideoStyle = false }: AvatarPanelProps) => {
-  const { role, name, status } = agent;
+  const { role, name, status, color, avatar } = agent;
   
   // Map status to readable text
   const statusText = {
@@ -24,10 +25,10 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage, showVideoStyle = fa
   
   // Status pill styling
   const statusClass = {
-    speaking: 'speaking',
-    listening: 'listening',
-    idle: 'idle',
-    thinking: 'thinking',
+    speaking: 'bg-green-500 text-white',
+    listening: 'bg-blue-500 text-white',
+    idle: 'bg-gray-500 text-white',
+    thinking: 'bg-purple-500 text-white animate-pulse',
   };
   
   // Don't display anything if this is a user message (though this should be filtered out earlier)
@@ -40,7 +41,7 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage, showVideoStyle = fa
         {/* Background color based on agent color */}
         <div 
           className="absolute inset-0 opacity-10" 
-          style={{ backgroundColor: agent.color }}
+          style={{ backgroundColor: agent.color || '#3B82F6' }}
         />
         
         <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
@@ -53,7 +54,7 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage, showVideoStyle = fa
           </div>
           
           {/* Only show the status indicator */}
-          <span className={cn("status-pill transition-all duration-300 mt-2", statusClass[status])}>
+          <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", statusClass[status])}>
             {statusText[status]}
           </span>
           
@@ -79,7 +80,7 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage, showVideoStyle = fa
           <p className="text-sm text-muted-foreground font-semibold">{role}</p>
         </div>
         
-        <span className={cn("status-pill transition-all duration-300", statusClass[status])}>
+        <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", statusClass[status])}>
           {statusText[status]}
         </span>
         
