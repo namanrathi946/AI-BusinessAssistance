@@ -79,7 +79,7 @@ const agentPersonalities: Record<AgentRole, {
     catchphrases: ['Looking at the big picture', 'Let\'s align on this', 'From a strategic standpoint', 'The market demands that we', 'I was discussing with our board'],
     background: 'MBA from Harvard, 15 years in leadership positions, previously led a successful IPO',
     interruptions: ['Let me add a strategic perspective here', 'If I can redirect us for a moment', 'That\'s a good point, but let\'s consider'],
-    thinkingPatterns: 'Strategic and future-oriented, weighs decisions against company vision and market positioning'
+    thinkingPatterns: ['Strategic and future-oriented', 'Weighs decisions against company vision and market positioning']
   },
   'CTO': {
     traits: ['analytical', 'innovative', 'detail-oriented', 'practical', 'solution-driven'],
@@ -89,7 +89,7 @@ const agentPersonalities: Record<AgentRole, {
     catchphrases: ['From a technical perspective', 'The data suggests', 'We need to consider the scalability', 'Our engineering team has found', 'If we look at the architecture'],
     background: 'Computer Science PhD, previously led development at a major tech company, holds several patents',
     interruptions: ['Let me add a technical perspective', 'Actually, there\'s an important technical consideration', 'The challenge with that approach is'],
-    thinkingPatterns: 'Systematic and analytical, considers technical feasibility first, then maps to business needs'
+    thinkingPatterns: ['Systematic and analytical', 'Considers technical feasibility first, then maps to business needs']
   },
   'CFO': {
     traits: ['precise', 'prudent', 'data-driven', 'risk-aware', 'detail-focused'],
@@ -99,7 +99,7 @@ const agentPersonalities: Record<AgentRole, {
     catchphrases: ['From a financial standpoint', 'If we look at the numbers', 'The ROI on this would be', 'Our margins would be impacted by', 'We need to consider the cost implications'],
     background: 'CPA with financial advisory background, previously led financial strategy at Fortune 500 companies',
     interruptions: ['If I can add a financial perspective', 'Let\'s consider the cost implications', 'Have we budgeted for this?'],
-    thinkingPatterns: 'Risk-assessment oriented, evaluates ideas primarily by financial impact and ROI'
+    thinkingPatterns: ['Risk-assessment oriented', 'Evaluates ideas primarily by financial impact and ROI']
   },
   'HR': {
     traits: ['empathetic', 'people-focused', 'diplomatic', 'culture-minded', 'perceptive'],
@@ -109,7 +109,7 @@ const agentPersonalities: Record<AgentRole, {
     catchphrases: ['From a talent perspective', 'Our team members have expressed', 'The cultural impact would be', 'This would help with retention', 'We\'ve been hearing from employees that'],
     background: 'Psychology background with executive coaching certification, previously transformed company cultures at several organizations',
     interruptions: ['I\'m concerned about the impact on our people', 'Let\'s consider how the team would respond', 'From a culture standpoint'],
-    thinkingPatterns: 'People-first approach, considers organizational dynamics and employee experience ahead of other factors'
+    thinkingPatterns: ['People-first approach', 'Considers organizational dynamics and employee experience ahead of other factors']
   }
 };
 

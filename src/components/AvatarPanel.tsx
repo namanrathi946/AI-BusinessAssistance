@@ -7,9 +7,10 @@ import AvatarAnimation from './AvatarAnimation';
 interface AvatarPanelProps {
   agent: Agent;
   isCurrentSpeaker: boolean;
+  lastMessage?: string; // Added lastMessage as an optional prop
 }
 
-const AvatarPanel = ({ agent, isCurrentSpeaker }: AvatarPanelProps) => {
+const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage }: AvatarPanelProps) => {
   const { role, name, status } = agent;
   
   // Map status to readable text
@@ -44,6 +45,13 @@ const AvatarPanel = ({ agent, isCurrentSpeaker }: AvatarPanelProps) => {
         <span className={cn("status-pill transition-all duration-300", statusClass[status])}>
           {statusText[status]}
         </span>
+        
+        {/* Display the last message if available */}
+        {lastMessage && (
+          <div className="mt-2 text-sm italic text-muted-foreground overflow-hidden text-ellipsis">
+            "{lastMessage.length > 100 ? `${lastMessage.substring(0, 100)}...` : lastMessage}"
+          </div>
+        )}
       </div>
     </div>
   );
