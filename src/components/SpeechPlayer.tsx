@@ -10,12 +10,12 @@ interface SpeechPlayerProps {
   autoPlay?: boolean;
 }
 
-// Map of agent roles to voice IDs (using standard browser voices initially)
+// Map of agent roles to ElevenLabs voice IDs for more humanized speech
 const voiceMap: Record<string, string> = {
-  'CEO': 'en-US-AriaNeural', // Female voice
-  'CTO': 'en-US-ChristopherNeural', // Male voice
-  'CFO': 'en-US-SaraNeural', // Female voice
-  'HR': 'en-US-GuyNeural', // Male voice
+  'CEO': 'XB0fDUnXU5powFXDhCwa', // Charlotte - authoritative female
+  'CTO': 'TX3LPaxmHKxFdv7VOQHJ', // Liam - technical male
+  'CFO': 'EXAVITQu4vr4xnSDxMaL', // Sarah - precise female
+  'HR': 'iP95p4xoKVk53GoZ742B', // Chris - empathetic male
 };
 
 // Personality traits to make voices more distinct and human-like
@@ -56,31 +56,54 @@ const personalityTraits: Record<string, {
   }
 };
 
-// Keep track of voice loading state globally
-let voicesLoaded = false;
-let availableVoices: SpeechSynthesisVoice[] = [];
-
-// Load voices once when module initializes
-if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-  const loadVoices = () => {
-    const voices = window.speechSynthesis.getVoices();
-    if (voices && voices.length > 0) {
-      availableVoices = voices;
-      voicesLoaded = true;
-      console.log(`Loaded ${voices.length} voices`);
+// Function to add natural pauses, breathing, and emphasis to text
+const humanizeText = (text: string, role: string): string => {
+  const traits = personalityTraits[role];
+  if (!traits) return text;
+  
+  // Add occasional commas to create natural pauses
+  let humanizedText = text;
+  
+  // Add breathing pauses with commas
+  if (text.length > 50) {
+    const sentences = text.split('. ');
+    humanizedText = sentences.join(', . ');
+  }
+  
+  // Emphasize key words based on role
+  traits.emphasisWords.forEach(word => {
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    humanizedText = humanizedText.replace(regex, `, ${word},`);
+  });
+  
+  // Add occasional hmm/um for naturalness (only at sentence beginnings)
+  if (Math.random() < 0.2) {
+    const fillers = ['Hmm, ', 'Well, ', 'So, ', 'Actually, ', 'You know, '];
+    const randomFiller = fillers[Math.floor(Math.random() * fillers.length)];
+    
+    // Only add to the beginning of the text
+    if (!humanizedText.startsWith(randomFiller)) {
+      humanizedText = randomFiller + humanizedText.charAt(0).toLowerCase() + humanizedText.slice(1);
     }
-  };
+  }
   
-  // Load voices initially
-  loadVoices();
+  // Clean up excessive commas
+  humanizedText = humanizedText
+    .replace(/,\s*,/g, ',')
+    .replace(/,\s*\./g, '.');
   
-  // Set up event listener for when voices change/become available
-  window.speechSynthesis.onvoiceschanged = loadVoices;
-}
+  return humanizedText;
+};
+
+// Keep track of API key and use fallback if not available
+let ELEVEN_LABS_API_KEY: string | null = null;
 
 const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [useElevenLabs, setUseElevenLabs] = useState(false);
   const { toast } = useToast();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const previousTextRef = useRef<string>('');
   const isMounted = useRef(true);
@@ -89,13 +112,22 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
   // Check if speech synthesis is supported
   const isSpeechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
   
+  // Initialize API key from localStorage if available
+  useEffect(() => {
+    const savedKey = localStorage.getItem('elevenLabsApiKey');
+    if (savedKey) {
+      ELEVEN_LABS_API_KEY = savedKey;
+      setUseElevenLabs(true);
+    }
+  }, []);
+  
   // Set up cleanup effect
   useEffect(() => {
     // Set the mounted flag
     isMounted.current = true;
     
     // Ensure any ongoing speech is cancelled when the component mounts
-    if (isSpeechSupported) {
+    if (isSpeechSupported && !useElevenLabs) {
       try {
         window.speechSynthesis.cancel();
       } catch (error) {
@@ -106,61 +138,140 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
     // Clean up event listener and cancel any speech on unmount
     return () => {
       isMounted.current = false;
-      if (isSpeechSupported) {
+      if (isSpeechSupported && !useElevenLabs) {
         try {
           window.speechSynthesis.cancel();
         } catch (error) {
           // Silent error - just to prevent issues in some browsers
         }
       }
+      // Clean up audio element
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     };
-  }, []);
+  }, [useElevenLabs]);
 
   // Auto-play speech when text or agent changes
   useEffect(() => {
-    // Only auto-play if the text has changed, is not empty, and voices are loaded
-    if (autoPlay && text && text !== previousTextRef.current && voicesLoaded && isSpeechSupported && !loadFailedRef.current) {
+    // Only auto-play if the text has changed, is not empty
+    if (autoPlay && text && text !== previousTextRef.current && !loadFailedRef.current) {
       previousTextRef.current = text;
       handlePlay();
     }
   }, [text, agent, autoPlay]);
   
-  // Add natural pauses and emphasis to text for more human-like speech
-  const humanizeText = (text: string, role: string): string => {
-    const traits = personalityTraits[role];
-    if (!traits) return text;
+  // Function to handle ElevenLabs TTS
+  const playWithElevenLabs = async (text: string) => {
+    if (!ELEVEN_LABS_API_KEY) {
+      // Prompt user for API key if not available
+      const apiKey = prompt('Please enter your ElevenLabs API key to enable enhanced voice synthesis:');
+      if (apiKey) {
+        ELEVEN_LABS_API_KEY = apiKey;
+        localStorage.setItem('elevenLabsApiKey', apiKey);
+        setUseElevenLabs(true);
+      } else {
+        // Fall back to browser TTS
+        setUseElevenLabs(false);
+        playWithBrowserTTS(text);
+        return;
+      }
+    }
     
-    // Add occasional commas to create natural pauses
-    let humanizedText = text;
+    setIsLoading(true);
+    setIsPlaying(true);
     
-    // Emphasize key words based on role
-    traits.emphasisWords.forEach(word => {
-      const regex = new RegExp(`\\b${word}\\b`, 'gi');
-      humanizedText = humanizedText.replace(regex, `, ${word},`);
-    });
-    
-    // Clean up excessive commas
-    humanizedText = humanizedText
-      .replace(/,\s*,/g, ',')
-      .replace(/,\s*\./g, '.');
-    
-    return humanizedText;
+    try {
+      // Humanize the text for more natural speech patterns
+      const humanizedText = humanizeText(text, agent.role);
+      
+      // Get voice ID based on agent role
+      const voiceId = voiceMap[agent.role] || 'iP95p4xoKVk53GoZ742B'; // Fallback to default voice
+      
+      // Make request to ElevenLabs API
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': ELEVEN_LABS_API_KEY
+        },
+        body: JSON.stringify({
+          text: humanizedText,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability: 0.35,
+            similarity_boost: 0.75,
+            style: 0.3,
+            use_speaker_boost: true
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`ElevenLabs API error: ${response.status}`);
+      }
+      
+      // Create a blob from the audio stream
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      // Create audio element and play
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      
+      audio.onended = () => {
+        if (isMounted.current) {
+          setIsPlaying(false);
+          setIsLoading(false);
+          URL.revokeObjectURL(audioUrl);
+        }
+      };
+      
+      audio.onerror = () => {
+        if (isMounted.current) {
+          setIsPlaying(false);
+          setIsLoading(false);
+          URL.revokeObjectURL(audioUrl);
+          toast({
+            title: "Error playing audio",
+            description: "Falling back to browser speech synthesis",
+            variant: "destructive"
+          });
+          // Fall back to browser TTS
+          setUseElevenLabs(false);
+          playWithBrowserTTS(text);
+        }
+      };
+      
+      await audio.play();
+    } catch (error) {
+      console.error('Error with ElevenLabs API:', error);
+      setIsPlaying(false);
+      setIsLoading(false);
+      setUseElevenLabs(false);
+      
+      toast({
+        title: "ElevenLabs API Error",
+        description: "Falling back to browser speech synthesis",
+        variant: "destructive"
+      });
+      
+      // Fall back to browser TTS
+      playWithBrowserTTS(text);
+    }
   };
   
-  const handlePlay = () => {
+  // Function to handle browser TTS
+  const playWithBrowserTTS = (text: string) => {
     if (!isSpeechSupported) {
       // Don't show errors for unsupported browsers, just return silently
       return;
     }
 
-    if (loadFailedRef.current) {
-      return; // Don't try again if we've already failed
-    }
-
     try {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      setIsPlaying(false);
       
       // If no text to speak, just return
       if (!text || text.trim() === '') {
@@ -173,38 +284,37 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
       speechSynthRef.current = utterance;
       
       // Set up voice based on agent role
-      if (availableVoices && availableVoices.length > 0) {
-        // Try to find a voice that matches the preferred voice for this agent
-        const preferredVoice = availableVoices.find(voice => 
-          voice.name.includes(voiceMap[agent.role] || '')
-        );
+      const voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length > 0) {
+        // Try to find a voice by gender
+        let selectedVoice = null;
         
-        // Fallback to a voice based on gender (for CEO/CFO use female, for CTO/HR use male)
-        const fallbackVoice = availableVoices.find(voice => {
-          if (agent.role === 'CEO' || agent.role === 'CFO') {
-            return voice.name.toLowerCase().includes('female');
-          } else {
-            return voice.name.toLowerCase().includes('male');
-          }
-        });
+        if (agent.role === 'CEO' || agent.role === 'CFO') {
+          // Find female voice
+          selectedVoice = voices.find(voice => 
+            voice.name.toLowerCase().includes('female') || 
+            voice.name.includes('icrosoft') && voice.name.includes('ara')
+          );
+        } else {
+          // Find male voice
+          selectedVoice = voices.find(voice => 
+            voice.name.toLowerCase().includes('male') || 
+            voice.name.includes('icrosoft') && voice.name.includes('avid')
+          );
+        }
         
-        // Last resort fallback - just use any English voice
-        const lastResortVoice = availableVoices.find(voice => 
-          voice.lang.startsWith('en-')
-        );
+        // Fallback to any English voice
+        if (!selectedVoice) {
+          selectedVoice = voices.find(voice => voice.lang.startsWith('en-'));
+        }
         
         // Final fallback - use the first available voice
-        const finalFallbackVoice = availableVoices[0];
+        if (!selectedVoice && voices.length > 0) {
+          selectedVoice = voices[0];
+        }
         
-        // Set the voice if found, otherwise use default
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
-        } else if (fallbackVoice) {
-          utterance.voice = fallbackVoice;
-        } else if (lastResortVoice) {
-          utterance.voice = lastResortVoice;
-        } else if (finalFallbackVoice) {
-          utterance.voice = finalFallbackVoice;
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
         }
       }
       
@@ -236,26 +346,15 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
         }
       };
       
-      utterance.onerror = (event) => {
+      utterance.onerror = () => {
         if (isMounted.current) {
           setIsPlaying(false);
-          
-          // Mark as failed so we don't keep trying
           loadFailedRef.current = true;
-          
-          // Don't show toast errors for speech synthesis issues to avoid spamming users
-          console.warn('Speech synthesis error - disabling autoplay for this session');
         }
       };
       
-      // Wrap speech in try-catch to handle any potential errors
-      try {
-        window.speechSynthesis.speak(utterance);
-      } catch (error) {
-        // If speech fails, silently disable for this session
-        loadFailedRef.current = true;
-        setIsPlaying(false);
-      }
+      // Speak the text
+      window.speechSynthesis.speak(utterance);
     } catch (error) {
       // If any part of the process fails, disable speech for this session
       loadFailedRef.current = true;
@@ -263,15 +362,30 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
     }
   };
   
+  const handlePlay = () => {
+    if (loadFailedRef.current) return;
+    
+    if (useElevenLabs) {
+      playWithElevenLabs(text);
+    } else {
+      playWithBrowserTTS(text);
+    }
+  };
+  
   const handleStop = () => {
-    if (isSpeechSupported) {
+    if (useElevenLabs) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    } else if (isSpeechSupported) {
       try {
         window.speechSynthesis.cancel();
-        setIsPlaying(false);
       } catch (error) {
         // Silent error - just to prevent issues in some browsers
       }
     }
+    setIsPlaying(false);
   };
   
   const handleToggle = () => {
@@ -282,26 +396,66 @@ const SpeechPlayer = ({ text, agent, autoPlay = true }: SpeechPlayerProps) => {
     }
   };
   
+  // Toggle between ElevenLabs and browser TTS
+  const toggleVoiceEngine = () => {
+    if (!useElevenLabs && !ELEVEN_LABS_API_KEY) {
+      const apiKey = prompt('Please enter your ElevenLabs API key to enable enhanced voice synthesis:');
+      if (apiKey) {
+        ELEVEN_LABS_API_KEY = apiKey;
+        localStorage.setItem('elevenLabsApiKey', apiKey);
+        setUseElevenLabs(true);
+        
+        toast({
+          title: "Enhanced voices enabled",
+          description: "Using ElevenLabs for more natural speech",
+        });
+      }
+    } else {
+      setUseElevenLabs(!useElevenLabs);
+      
+      toast({
+        title: useElevenLabs ? "Using browser voices" : "Using enhanced voices",
+        description: useElevenLabs ? "Switched to standard browser TTS" : "Switched to ElevenLabs for more natural speech",
+      });
+    }
+  };
+  
   // If speech has been marked as failed, don't render the speech button at all
   if (loadFailedRef.current) {
     return null;
   }
   
   return (
-    <Button 
-      variant="ghost" 
-      size="icon" 
-      className="h-8 w-8 rounded-full hover:bg-primary/20 transition-all"
-      onClick={handleToggle}
-      title={isPlaying ? "Stop Speaking" : "Play Message"}
-      type="button"
-    >
-      {isPlaying ? (
-        <VolumeX className="h-4 w-4" />
-      ) : (
-        <Volume2 className="h-4 w-4" />
-      )}
-    </Button>
+    <div className="flex items-center space-x-1">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className={`h-8 w-8 rounded-full transition-all ${isLoading ? 'animate-pulse' : ''} ${
+          useElevenLabs ? 'hover:bg-violet-500/20' : 'hover:bg-primary/20'
+        }`}
+        onClick={handleToggle}
+        title={isPlaying ? "Stop Speaking" : "Play Message"}
+        type="button"
+        disabled={isLoading}
+      >
+        {isPlaying ? (
+          <VolumeX className={`h-4 w-4 ${useElevenLabs ? 'text-violet-500' : ''}`} />
+        ) : (
+          <Volume2 className={`h-4 w-4 ${useElevenLabs ? 'text-violet-500' : ''}`} />
+        )}
+      </Button>
+      
+      {/* Small indicator to show which voice engine is being used */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className={`h-5 px-1 text-[10px] rounded ${useElevenLabs ? 'text-violet-500 hover:bg-violet-500/10' : 'text-muted-foreground hover:bg-primary/10'}`}
+        onClick={toggleVoiceEngine}
+        title={useElevenLabs ? "Using enhanced voices (ElevenLabs)" : "Using browser voices"}
+      >
+        {useElevenLabs ? 'HD' : 'STD'}
+      </Button>
+    </div>
   );
 };
 
