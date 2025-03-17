@@ -2,10 +2,15 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { MeetingState } from '../types';
-import { MessageSquare, Download, PauseCircle, PlayCircle, PhoneOff, BarChart2, Database, Play, Users, Mic } from 'lucide-react';
+import { 
+  MessageSquare, Download, PauseCircle, PlayCircle, PhoneOff, BarChart2, 
+  Database, Users, Mic, Video, VideoOff, MicOff, Share2, Layout, 
+  MoreHorizontal, Clock, Shield
+} from 'lucide-react';
 import ChatPromptBox from './ChatPromptBox';
 import { toast } from '@/hooks/use-toast';
 import { isSpeechRecognitionSupported } from '../utils/speechRecognitionUtils';
+import { cn } from '@/lib/utils';
 
 interface ControlPanelProps {
   onToggleTranscript: () => void;
@@ -39,6 +44,8 @@ const ControlPanel = ({
   const isActive = meetingStatus === 'active';
   const isMeetingOngoing = meetingStatus === 'active' || meetingStatus === 'paused';
   const [showChatPrompt, setShowChatPrompt] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [videoEnabled, setVideoEnabled] = useState(true);
   
   const handleSendChatMessage = (message: string) => {
     if (onSendChatMessage) {
@@ -57,111 +64,131 @@ const ControlPanel = ({
     }
     setShowChatPrompt(false);
   };
+
+  // Meeting duration display
+  const getMeetingDuration = () => {
+    // This would be dynamic in a real app
+    return "00:24";
+  };
   
+  // Video conference style control bar
   return (
-    <div className="glass-panel p-4 flex flex-wrap justify-between items-center gap-2 animate-fade-in hover:shadow-lg transition-all duration-300">
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onToggleTranscript}
-          className={`transition-all duration-200 hover:scale-105 ${transcriptVisible ? 'bg-secondary/50 border-primary/30' : ''}`}
-        >
-          <MessageSquare className="h-4 w-4 mr-2" />
-          {transcriptVisible ? 'Hide Transcript' : 'Show Transcript'}
-        </Button>
+    <div className="bg-meeting-dark rounded-b-lg text-white py-3 px-4">
+      <div className="flex justify-between items-center">
+        {/* Left section - Meeting info */}
+        <div className="flex items-center space-x-4 text-sm">
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-1" />
+            <span>{getMeetingDuration()}</span>
+          </div>
+          <div className="hidden md:block">
+            <span>Team Meeting</span>
+          </div>
+        </div>
         
-        {onToggleBusinessData && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onToggleBusinessData}
-            className={`transition-all duration-200 hover:scale-105 ${businessDataVisible ? 'bg-secondary/50 border-primary/30' : ''}`}
-          >
-            <BarChart2 className="h-4 w-4 mr-2" />
-            {businessDataVisible ? 'Hide Business Data' : 'Show Business Data'}
-          </Button>
-        )}
-        
-        {onUploadDataset && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onUploadDataset}
-            className="hover:bg-blue-100/50 dark:hover:bg-blue-900/20 transition-all duration-200 hover:scale-105"
-          >
-            <Database className="h-4 w-4 mr-2" />
-            Upload Business Data
-          </Button>
-        )}
-
-        {isMeetingOngoing && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowChatPrompt(prev => !prev)}
-            className={`transition-all duration-200 hover:scale-105 ${showChatPrompt ? 'bg-secondary/50 border-primary/30' : ''}`}
-          >
-            <Mic className="h-4 w-4 mr-2" />
-            {showChatPrompt ? 'Hide Chat' : 'Send Message'}
-          </Button>
-        )}
-
-        {onStartDiscussion && hasBusinessData && meetingStatus !== 'active' && (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={onStartDiscussion}
-            className="bg-meeting-green text-white hover:bg-meeting-green/80 shadow-md hover:shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Start Boardroom Discussion
-          </Button>
-        )}
-        
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onExportChat}
-          className="hover:bg-green-100/50 dark:hover:bg-green-900/20 transition-all duration-200 hover:scale-105"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Export Chat
-        </Button>
-      </div>
-      
-      <div className="flex gap-2">
-        {isMeetingOngoing && (
-          <Button
-            variant={isActive ? "secondary" : "default"}
-            size="sm"
-            onClick={onToggleStatus}
-            className={`transition-all duration-200 hover:scale-105 ${isActive ? 'hover:bg-yellow-100/50 dark:hover:bg-yellow-900/20' : 'hover:bg-green-100/50 dark:hover:bg-green-900/20'}`}
-          >
-            {isActive ? (
-              <>
-                <PauseCircle className="h-4 w-4 mr-2" />
-                Pause
-              </>
-            ) : (
-              <>
-                <PlayCircle className="h-4 w-4 mr-2" />
-                Resume
-              </>
+        {/* Center section - Main controls */}
+        <div className="flex items-center justify-center space-x-2">
+          {/* Audio toggle */}
+          <button 
+            onClick={() => setAudioEnabled(!audioEnabled)}
+            className={cn(
+              "control-button group",
+              !audioEnabled && "bg-red-600 hover:bg-red-700"
             )}
-          </Button>
-        )}
+            title={audioEnabled ? "Mute" : "Unmute"}
+          >
+            {audioEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+            <span className="control-button-label">
+              {audioEnabled ? "Mute" : "Unmute"}
+            </span>
+          </button>
+          
+          {/* Video toggle */}
+          <button 
+            onClick={() => setVideoEnabled(!videoEnabled)}
+            className={cn(
+              "control-button group",
+              !videoEnabled && "bg-red-600 hover:bg-red-700"
+            )}
+            title={videoEnabled ? "Stop Video" : "Start Video"}
+          >
+            {videoEnabled ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
+            <span className="control-button-label">
+              {videoEnabled ? "Stop Video" : "Start Video"}
+            </span>
+          </button>
+          
+          {/* Participants */}
+          <button 
+            onClick={onStartDiscussion}
+            className="control-button group"
+            title="Participants"
+          >
+            <Users className="h-5 w-5" />
+            <span className="control-button-label">Participants</span>
+          </button>
+          
+          {/* Chat */}
+          <button 
+            onClick={() => setShowChatPrompt(prev => !prev)}
+            className={cn(
+              "control-button group",
+              showChatPrompt && "bg-blue-600 hover:bg-blue-700"
+            )}
+            title="Chat"
+          >
+            <MessageSquare className="h-5 w-5" />
+            <span className="control-button-label">Chat</span>
+          </button>
+          
+          {/* Share Screen */}
+          <button 
+            className="control-button group"
+            title="Share Screen"
+            onClick={onToggleBusinessData}
+          >
+            <Share2 className="h-5 w-5" />
+            <span className="control-button-label">Share</span>
+          </button>
+          
+          {/* Meeting Controls */}
+          {isMeetingOngoing && (
+            <button
+              onClick={onToggleStatus}
+              className={cn(
+                "control-button group",
+                !isActive && "bg-blue-600 hover:bg-blue-700"
+              )}
+              title={isActive ? "Pause Meeting" : "Resume Meeting"}
+            >
+              {isActive ? <PauseCircle className="h-5 w-5" /> : <PlayCircle className="h-5 w-5" />}
+              <span className="control-button-label">
+                {isActive ? "Pause" : "Resume"}
+              </span>
+            </button>
+          )}
+          
+          {/* More options */}
+          <button 
+            className="control-button group"
+            title="More Options"
+          >
+            <MoreHorizontal className="h-5 w-5" />
+            <span className="control-button-label">More</span>
+          </button>
+        </div>
         
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={onEndMeeting}
-          disabled={meetingStatus === 'ended'}
-          className="shadow-md hover:shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
-        >
-          <PhoneOff className="h-4 w-4 mr-2" />
-          End Meeting
-        </Button>
+        {/* Right section - End call */}
+        <div>
+          <button
+            onClick={onEndMeeting}
+            className="control-button danger group"
+            title="End Meeting"
+          >
+            <PhoneOff className="h-5 w-5" />
+            <span className="control-button-label">End</span>
+          </button>
+        </div>
       </div>
       
       {/* Chat Prompt Overlay */}
