@@ -1,4 +1,3 @@
-
 import { Agent, AgentRole, Message, AgentStatus } from '../types';
 import { generateRoleInsights } from './businessDataUtils';
 import { sampleBusinessData } from '../data/sampleBusinessData';
@@ -70,7 +69,7 @@ const agentPersonalities: Record<AgentRole, {
   catchphrases: string[];
   background: string;
   interruptions: string[];
-  thinkingPatterns: string;
+  thinkingPatterns: string[];
 }> = {
   'CEO': {
     traits: ['confident', 'visionary', 'strategic', 'decisive', 'ambitious'],
@@ -203,12 +202,13 @@ Humanize your responses by:
   userPrompt += ` Review the conversation history below and provide a thoughtful response that:
 1. Addresses any questions or points raised by other executives
 2. Offers insights from your area of expertise (${agent.role})
-3. Is concise (100-150 words)
-4. Is conversational but professional (using your catchphrases and speaking style)
-5. Connects to the specific business data relevant to your role
-6. Occasionally disagrees with or challenges other perspectives in a constructive way
-7. Might interrupt to make an important point or redirect the conversation
-8. Reflects your thinking patterns: ${personality.thinkingPatterns}
+3. Is VERY CONCISE (40-60 words maximum)
+4. Gets straight to the point without unnecessary context
+5. Is conversational but professional (using your catchphrases and speaking style)
+6. Connects to the specific business data relevant to your role
+7. Occasionally disagrees with or challenges other perspectives in a constructive way
+8. Might interrupt to make an important point or redirect the conversation
+9. Reflects your thinking patterns: ${personality.thinkingPatterns}
 
 Conversation history:
 ${conversationHistory}
@@ -242,7 +242,7 @@ export const generateAgentMessage = async (
           { role: 'system', content: promptData.systemPrompt },
           { role: 'user', content: promptData.userPrompt }
         ],
-        max_tokens: 250,
+        max_tokens: 150,
         temperature: 0.7
       })
     });
@@ -268,19 +268,19 @@ export const generateAgentMessage = async (
     // Fallback to static messages if API fails
     const insights = generateRoleInsights(agent.role, businessData);
     
-    // Simplified fallback responses
+    // Simplified fallback responses - made even shorter
     const fallbackResponses: Record<AgentRole, string[]> = {
       'CEO': [
-        `Our company ${businessData.companyName} has shown impressive growth with ${insights.keyMetrics.revenueGrowth?.growth}% revenue growth. Let's discuss our strategy on ${topic || 'our business performance'}.`,
+        `Our ${businessData.companyName} growth is ${insights.keyMetrics.revenueGrowth?.growth}%. We should focus on ${topic || 'performance'}.`,
       ],
       'CTO': [
-        `From a technology perspective, our focus on ${topic || 'innovation'} has been successful with our tech stack now including ${businessData.technologyData.slice(-1)[0].techStack.slice(-3).join(', ')}.`,
+        `Tech-wise, our ${topic || 'innovation'} progress includes ${businessData.technologyData.slice(-1)[0].techStack.slice(-1)[0]}.`,
       ],
       'CFO': [
-        `Regarding ${topic || 'our financials'}, we've seen strong performance with revenue of $${businessData.financialData.slice(-1)[0].revenue/1000000}M and a profit margin of ${insights.keyMetrics.profitMargin}.`,
+        `For ${topic || 'financials'}, revenue: $${businessData.financialData.slice(-1)[0].revenue/1000000}M, margin: ${insights.keyMetrics.profitMargin}.`,
       ],
       'HR': [
-        `From an HR perspective, ${topic || 'our team growth'} has been notable as we've grown to ${insights.workforceSummary.split(' ')[3]} employees with ${insights.keyMetrics.attritionRate} attrition rate.`,
+        `Team ${topic || 'growth'}: ${insights.workforceSummary.split(' ')[3]} employees, ${insights.keyMetrics.attritionRate} attrition.`,
       ],
     };
     

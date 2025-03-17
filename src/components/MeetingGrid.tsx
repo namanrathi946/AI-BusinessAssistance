@@ -41,6 +41,7 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
             <AvatarPanel
               agent={agent}
               isCurrentSpeaker={isCurrentSpeaker}
+              lastMessage={getLastMessage(agent.id)}
             />
           </div>
         );
