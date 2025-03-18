@@ -305,19 +305,19 @@ export const simulateConversation = async (
   onAgentStatusChange: (agentId: string, status: Agent['status']) => void,
   businessData: BusinessData,
   topic: string = '',
-  maxMessages: number = 8
+  maxMessages: number = 30
 ) => {
-  console.log(`Starting discussion${topic ? ` on topic: ${topic}` : ''}`)
-  console.log("Business data for discussion:", businessData);
+  console.log(`Continuing discussion${topic ? ` on topic: ${topic}` : ''}`)
+  console.log("Messages in conversation:", initialMessages.length);
+  console.log("Max messages allowed:", maxMessages);
   
-  // Allow conversations to continue longer when there's user interaction
-  // by accepting a maxMessages parameter (default 8)
+  // Continue the conversation as long as we're under the max message limit
   if (initialMessages.length < maxMessages) {
     // Get the last message to determine if it's from a user
     const lastMessage = initialMessages[initialMessages.length - 1];
     const isLastMessageFromUser = lastMessage?.agentId === 'user';
     
-    // Determine which agent speaks next (simple round-robin)
+    // Determine which agent speaks next
     let nextSpeakerIndex;
     
     if (isLastMessageFromUser) {
@@ -340,18 +340,18 @@ export const simulateConversation = async (
     onAgentStatusChange(nextAgent.id, 'thinking');
     
     // Wait a moment to simulate thinking
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     // Update to speaking status
     onAgentStatusChange(nextAgent.id, 'speaking');
     
-    // Generate and add the new message - passing the topic to make sure
-    // the agents discuss the specified topic
+    // Generate and add the new message - using the most recent topic
+    // if a user asked a question, use that as the new topic
     const newMessage = await generateAgentMessage(
       initialMessages, 
       nextAgent, 
       businessData,
-      topic
+      isLastMessageFromUser ? lastMessage.text : topic
     );
     onNewMessage(newMessage);
     
@@ -359,14 +359,21 @@ export const simulateConversation = async (
     setTimeout(() => {
       onAgentStatusChange(nextAgent.id, 'idle');
       
-      // Continue the conversation after a pause
+      // Continue the conversation after a shorter pause to keep momentum
       setTimeout(() => {
-        // We need to call this as an async function without await
-        // since we're inside a setTimeout callback
-        simulateConversation(agents, [...initialMessages, newMessage], onNewMessage, onAgentStatusChange, businessData, topic, maxMessages);
-      }, 2000);
+        // Call this as an async function without await since we're in a setTimeout
+        simulateConversation(
+          agents, 
+          [...initialMessages, newMessage], 
+          onNewMessage, 
+          onAgentStatusChange, 
+          businessData, 
+          isLastMessageFromUser ? lastMessage.text : topic,
+          maxMessages
+        );
+      }, 1500);
       
-    }, 2000);
+    }, 1500);
   }
 };
 

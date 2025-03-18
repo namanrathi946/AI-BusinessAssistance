@@ -372,7 +372,7 @@ const Index = () => {
     } else {
       // If the meeting is already active, trigger a new conversation round
       // with the user's question included
-      // We set maxMessages to a higher number to allow for more conversation turns
+      // We set maxMessages to a much higher number to ensure multiple questions can be handled
       simulateConversation(
         meetingState.agents,
         updatedMessages,
@@ -380,7 +380,7 @@ const Index = () => {
         handleAgentStatusChange,
         businessData || sampleBusinessData,
         question, // Use the question as the new topic
-        20 // Allow more messages to accommodate follow-up discussions
+        50 // Allow many more messages to accommodate multiple rounds of discussion
       );
     }
   };
@@ -539,3 +539,4 @@ const Index = () => {
 };
 
 export default Index;
+

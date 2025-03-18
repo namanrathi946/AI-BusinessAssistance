@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageSquare, Send } from 'lucide-react';
@@ -11,28 +11,35 @@ interface BoardroomQuestionInputProps {
 const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQuestionInputProps) => {
   const [question, setQuestion] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [hasAskedQuestion, setHasAskedQuestion] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  useEffect(() => {
+    if (isExpanded && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [isExpanded]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (question.trim()) {
       onSendQuestion(question);
       setQuestion('');
+      setHasAskedQuestion(true);
       
-      // Keep expanded so the user can easily ask another question
-      // This improves UX by keeping the input available
+      setIsExpanded(true);
+      
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   };
   
   const toggleExpand = () => {
     const newState = !isExpanded;
     setIsExpanded(newState);
-    if (newState) {
-      // Focus the input when expanded
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-    }
   };
   
   return (
@@ -44,7 +51,7 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
           disabled={disabled}
         >
           <MessageSquare size={20} />
-          <span>Ask Boardroom a Question</span>
+          <span>{hasAskedQuestion ? "Ask Another Question" : "Ask Boardroom a Question"}</span>
         </Button>
       ) : (
         <form onSubmit={handleSubmit} className="question-form">
@@ -53,7 +60,7 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
               ref={inputRef}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Type your question to the executive board..."
+              placeholder={hasAskedQuestion ? "Ask a follow-up question..." : "Type your question to the executive board..."}
               className="question-input"
               disabled={disabled}
             />
@@ -71,7 +78,7 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
             onClick={toggleExpand} 
             className="cancel-button"
           >
-            Cancel
+            {hasAskedQuestion ? "Hide" : "Cancel"}
           </Button>
         </form>
       )}
