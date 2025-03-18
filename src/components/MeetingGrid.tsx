@@ -21,8 +21,28 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
       .slice(-1)[0]?.text || '';
   };
 
-  // Determine layout (small grid or featured view) based on number of agents
-  const useGridLayout = aiAgents.length >= 4;
+  // Default to grid layout if no agents are available to prevent empty view
+  const useGridLayout = aiAgents.length >= 4 || aiAgents.length === 0;
+  
+  // If there are no AI agents, show a placeholder message
+  if (aiAgents.length === 0) {
+    return (
+      <div className="flex flex-col h-full bg-meeting-dark rounded-lg overflow-hidden border border-white/10">
+        <div className="p-2 text-white font-medium text-center border-b border-white/10">
+          AI Agents Video Grid
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-white text-center p-6">
+            <h3 className="text-xl font-semibold mb-2">No AI Agents Available</h3>
+            <p className="text-gray-400">
+              Waiting for the meeting to start. Please click "Start Discussion" in the control panel.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   const featuredSpeaker = aiAgents.find(agent => agent.id === currentSpeaker) || aiAgents[0];
   const otherAgents = aiAgents.filter(agent => agent.id !== featuredSpeaker.id);
   
@@ -41,8 +61,8 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
             return (
               <div 
                 key={agent.id}
-                className={`relative rounded-lg overflow-hidden ${
-                  isCurrentSpeaker ? 'ring-2 ring-meeting-green animate-pulse' : ''
+                className={`relative rounded-lg overflow-hidden border border-gray-700 ${
+                  isCurrentSpeaker ? 'ring-2 ring-green-500 animate-pulse' : ''
                 }`}
               >
                 <AvatarPanel
@@ -71,7 +91,7 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
       {/* Featured speaker */}
       <div className="flex-1 p-2">
         <div className="h-[60%] mb-2">
-          <div className="relative h-full rounded-lg overflow-hidden border border-white/10">
+          <div className="relative h-full rounded-lg overflow-hidden border border-gray-700">
             <AvatarPanel
               agent={featuredSpeaker}
               isCurrentSpeaker={featuredSpeaker.id === currentSpeaker}
@@ -85,15 +105,15 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
         </div>
         
         {/* Bottom row of other participants */}
-        <div className="h-[40%] grid grid-cols-3 md:grid-cols-4 gap-2">
+        <div className="h-[40%] grid grid-cols-2 md:grid-cols-3 gap-2">
           {otherAgents.map((agent) => {
             const isCurrentSpeaker = agent.id === currentSpeaker;
             
             return (
               <div 
                 key={agent.id}
-                className={`relative rounded-lg overflow-hidden border border-white/10 ${
-                  isCurrentSpeaker ? 'ring-2 ring-meeting-green animate-pulse' : ''
+                className={`relative rounded-lg overflow-hidden border border-gray-700 ${
+                  isCurrentSpeaker ? 'ring-2 ring-green-500 animate-pulse' : ''
                 }`}
               >
                 <AvatarPanel

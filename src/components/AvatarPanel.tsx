@@ -37,23 +37,37 @@ const AvatarPanel = ({ agent, isCurrentSpeaker, lastMessage, showVideoStyle = fa
   // Video conference style
   if (showVideoStyle) {
     return (
-      <div className="w-full h-full relative bg-gray-800 overflow-hidden">
+      <div className="w-full h-full relative bg-gray-800 overflow-hidden flex flex-col items-center justify-center">
         {/* Background color based on agent color */}
         <div 
           className="absolute inset-0 opacity-10" 
-          style={{ backgroundColor: agent.color || '#3B82F6' }}
+          style={{ backgroundColor: color || '#3B82F6' }}
         />
         
         <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
           {/* Larger avatar for video style */}
           <div className="mb-2">
-            <AvatarAnimation 
-              agent={agent} 
-              size={isCurrentSpeaker ? "lg" : "md"} 
-            />
+            {avatar ? (
+              <img 
+                src={avatar} 
+                alt={name}
+                className="h-20 w-20 rounded-full object-cover border-2 border-white/20"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = `https://ui-avatars.com/api/?name=${name}&background=random&color=fff&size=128`;
+                }}
+              />
+            ) : (
+              <div className="h-20 w-20 rounded-full bg-blue-500 flex items-center justify-center text-white text-xl font-bold">
+                {name.charAt(0)}
+              </div>
+            )}
           </div>
           
-          {/* Only show the status indicator */}
+          {/* Name of the agent */}
+          <div className="text-white font-medium mb-1">{name}</div>
+          
+          {/* Status indicator */}
           <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", statusClass[status])}>
             {statusText[status]}
           </span>
