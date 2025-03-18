@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import MeetingGrid from '../components/MeetingGrid';
 import TranscriptPanel from '../components/TranscriptPanel';
@@ -18,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Mic, MicOff, Video, Shield, Users, Layout } from 'lucide-react';
+import { Mic, MicOff } from 'lucide-react';
 import { startSpeechRecognition, isSpeechRecognitionSupported } from '../utils/speechRecognitionUtils';
 
 const Index = () => {
@@ -335,99 +334,86 @@ const Index = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col bg-meeting-dark">
-      {/* Main video conference container */}
-      <div className="flex-1 flex flex-col max-h-screen">
-        {/* Header with meeting info */}
-        <div className="bg-meeting-dark text-white p-2 flex justify-between items-center border-b border-gray-700">
-          <div className="flex items-center space-x-2">
-            <Shield className="h-5 w-5 text-meeting-blue" />
-            <span className="font-semibold">
-              {businessData?.companyName || 'Executive Meeting'}
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1">
-              <span className={`h-3 w-3 rounded-full ${
-                meetingState.status === 'active' ? 'bg-meeting-green animate-pulse' :
-                meetingState.status === 'paused' ? 'bg-meeting-yellow' :
-                meetingState.status === 'ended' ? 'bg-meeting-red' : 'bg-meeting-blue animate-pulse'
-              }`}></span>
-              <span className="text-sm font-medium">
-                {meetingState.status === 'active' ? 'Live' :
-                meetingState.status === 'paused' ? 'Paused' :
-                meetingState.status === 'ended' ? 'Ended' : 'Ready'}
-              </span>
-            </div>
-            
-            {/* View controls */}
-            <div className="hidden md:flex items-center space-x-2">
-              <button className="p-1 rounded hover:bg-gray-700">
-                <Layout size={18} />
-              </button>
-            </div>
-          </div>
+    <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
+      {/* Header */}
+      <header className="glass-panel mb-6 p-4 flex justify-between items-center animate-fade-in hover-glow">
+        <div>
+          <h1 className="text-2xl font-bold">{businessData?.companyName || 'Executive Meeting'}</h1>
+          <p className="text-muted-foreground">
+            {meetingState.status === 'initializing' ? 'Ready to start discussion' :
+             meetingState.status === 'active' ? 'In Progress' :
+             meetingState.status === 'paused' ? 'Paused' : 'Ended'}
+          </p>
         </div>
+        <div className="flex items-center gap-2">
+          <span className={`h-3 w-3 rounded-full ${
+            meetingState.status === 'active' ? 'bg-meeting-green animate-pulse' :
+            meetingState.status === 'paused' ? 'bg-meeting-yellow' :
+            meetingState.status === 'ended' ? 'bg-meeting-red' : 'bg-meeting-blue animate-pulse'
+          }`}></span>
+          <span className="text-sm font-medium">
+            {meetingState.status === 'active' ? 'Live' :
+             meetingState.status === 'paused' ? 'Paused' :
+             meetingState.status === 'ended' ? 'Ended' : 'Ready'}
+          </span>
+        </div>
+      </header>
+      
+      {/* Main content */}
+      <main className="flex-1 flex flex-col space-y-6">
+        {/* Business data panel (conditionally displayed) */}
+        <BusinessDataPanel 
+          isVisible={businessDataVisible}
+          onToggleVisibility={handleToggleBusinessData}
+        />
         
-        {/* Main content area */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          {/* Business data panel (conditionally displayed) */}
-          <BusinessDataPanel 
-            isVisible={businessDataVisible}
-            onToggleVisibility={handleToggleBusinessData}
+        {/* Show Decision Summary Card if meeting has ended */}
+        {meetingState.status === 'ended' && (
+          <DecisionSummaryCard
+            messages={meetingState.messages}
+            agents={meetingState.agents}
+            businessData={businessData || sampleBusinessData}
+            discussionTopic={meetingState.discussionTopic}
+            onExport={handleExportSummary}
           />
-          
-          {/* Show Decision Summary Card if meeting has ended */}
-          {meetingState.status === 'ended' && (
-            <DecisionSummaryCard
-              messages={meetingState.messages}
+        )}
+        
+        {/* Meeting grid (hidden when meeting has ended and summary is showing) */}
+        {meetingState.status !== 'ended' && (
+          <div className="flex-1">
+            <MeetingGrid 
               agents={meetingState.agents}
-              businessData={businessData || sampleBusinessData}
-              discussionTopic={meetingState.discussionTopic}
-              onExport={handleExportSummary}
+              messages={meetingState.messages}
+              currentSpeaker={meetingState.currentSpeaker}
             />
-          )}
-          
-          {/* Meeting grid (hidden when meeting has ended and summary is showing) */}
-          {meetingState.status !== 'ended' && (
-            <div className="flex-1 overflow-hidden p-1">
-              <MeetingGrid 
-                agents={meetingState.agents}
-                messages={meetingState.messages}
-                currentSpeaker={meetingState.currentSpeaker}
-              />
-            </div>
-          )}
-          
-          {/* Transcript panel (conditionally displayed) */}
-          {meetingState.transcriptVisible && (
-            <div className="h-64 md:h-72 border-t border-gray-700">
-              <TranscriptPanel 
-                messages={meetingState.messages}
-                agents={meetingState.agents}
-                isVisible={meetingState.transcriptVisible}
-              />
-            </div>
-          )}
-          
-          {/* Control bar */}
-          <ControlPanel 
-            onToggleTranscript={handleToggleTranscript}
-            transcriptVisible={meetingState.transcriptVisible}
-            onToggleBusinessData={handleToggleBusinessData}
-            businessDataVisible={businessDataVisible}
-            onExportChat={handleExportChat}
-            meetingStatus={meetingState.status}
-            onToggleStatus={handleToggleStatus}
-            onEndMeeting={handleEndMeeting}
-            onUploadDataset={() => setIsDatasetModalOpen(true)}
-            onStartDiscussion={handleOpenStartDiscussionDialog}
-            hasBusinessData={!!businessData}
-            onSendChatMessage={handleSendChatMessage}
+          </div>
+        )}
+        
+        {/* Transcript panel (conditionally displayed) */}
+        {meetingState.transcriptVisible && (
+          <TranscriptPanel 
+            messages={meetingState.messages}
+            agents={meetingState.agents}
+            isVisible={meetingState.transcriptVisible}
           />
-        </div>
-      </div>
+        )}
+        
+        {/* Controls */}
+        <ControlPanel 
+          onToggleTranscript={handleToggleTranscript}
+          transcriptVisible={meetingState.transcriptVisible}
+          onToggleBusinessData={handleToggleBusinessData}
+          businessDataVisible={businessDataVisible}
+          onExportChat={handleExportChat}
+          meetingStatus={meetingState.status}
+          onToggleStatus={handleToggleStatus}
+          onEndMeeting={handleEndMeeting}
+          onUploadDataset={() => setIsDatasetModalOpen(true)}
+          onStartDiscussion={handleOpenStartDiscussionDialog}
+          hasBusinessData={!!businessData}
+          onSendChatMessage={handleSendChatMessage}
+        />
+      </main>
       
       {/* Dataset Upload Modal */}
       <DatasetUploadModal 
