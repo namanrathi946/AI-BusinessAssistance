@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +18,9 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
     if (question.trim()) {
       onSendQuestion(question);
       setQuestion('');
+      
+      // Keep expanded so the user can easily ask another question
+      // This improves UX by keeping the input available
     }
   };
   

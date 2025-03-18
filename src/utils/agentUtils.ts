@@ -304,20 +304,36 @@ export const simulateConversation = async (
   onNewMessage: (message: Message) => void,
   onAgentStatusChange: (agentId: string, status: Agent['status']) => void,
   businessData: BusinessData,
-  topic: string = ''
+  topic: string = '',
+  maxMessages: number = 8
 ) => {
   console.log(`Starting discussion${topic ? ` on topic: ${topic}` : ''}`)
   console.log("Business data for discussion:", businessData);
   
-  // If there are fewer than 8 messages, continue the conversation
-  if (initialMessages.length < 8) {
-    // Determine which agent speaks next (simple round-robin)
-    const lastSpeakerIndex = agents.findIndex(agent => 
-      agent.id === initialMessages[initialMessages.length - 1]?.agentId
-    );
+  // Allow conversations to continue longer when there's user interaction
+  // by accepting a maxMessages parameter (default 8)
+  if (initialMessages.length < maxMessages) {
+    // Get the last message to determine if it's from a user
+    const lastMessage = initialMessages[initialMessages.length - 1];
+    const isLastMessageFromUser = lastMessage?.agentId === 'user';
     
-    // Choose the next agent (circular)
-    const nextSpeakerIndex = (lastSpeakerIndex + 1) % agents.length;
+    // Determine which agent speaks next (simple round-robin)
+    let nextSpeakerIndex;
+    
+    if (isLastMessageFromUser) {
+      // If the last message is from a user, pick the CEO to respond first
+      nextSpeakerIndex = agents.findIndex(agent => agent.role === 'CEO');
+      // If CEO not found, pick the first agent
+      if (nextSpeakerIndex === -1) nextSpeakerIndex = 0;
+    } else {
+      // Get the last agent speaker index
+      const lastSpeakerIndex = agents.findIndex(agent => 
+        agent.id === initialMessages[initialMessages.length - 1]?.agentId
+      );
+      // Choose the next agent (circular)
+      nextSpeakerIndex = (lastSpeakerIndex + 1) % agents.length;
+    }
+    
     const nextAgent = agents[nextSpeakerIndex];
     
     // Update the agent's status to thinking
@@ -347,7 +363,7 @@ export const simulateConversation = async (
       setTimeout(() => {
         // We need to call this as an async function without await
         // since we're inside a setTimeout callback
-        simulateConversation(agents, [...initialMessages, newMessage], onNewMessage, onAgentStatusChange, businessData, topic);
+        simulateConversation(agents, [...initialMessages, newMessage], onNewMessage, onAgentStatusChange, businessData, topic, maxMessages);
       }, 2000);
       
     }, 2000);

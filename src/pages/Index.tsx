@@ -348,13 +348,14 @@ const Index = () => {
       keywords: []
     };
     
+    const updatedMessages = [...meetingState.messages, newMessage];
+    
     // Add to all messages for transcript
     setMeetingState(prev => ({
       ...prev,
-      messages: [...prev.messages, newMessage]
+      messages: updatedMessages
     }));
     
-    // In a real app, we'd send this message to the AI agents to process
     toast({
       title: "Question Submitted",
       description: "Your question has been sent to the executive board.",
@@ -368,6 +369,19 @@ const Index = () => {
         description: "Click 'Start Discussion' to begin the boardroom meeting.",
         duration: 5000,
       });
+    } else {
+      // If the meeting is already active, trigger a new conversation round
+      // with the user's question included
+      // We set maxMessages to a higher number to allow for more conversation turns
+      simulateConversation(
+        meetingState.agents,
+        updatedMessages,
+        handleNewMessage,
+        handleAgentStatusChange,
+        businessData || sampleBusinessData,
+        question, // Use the question as the new topic
+        20 // Allow more messages to accommodate follow-up discussions
+      );
     }
   };
   
