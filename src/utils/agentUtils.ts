@@ -113,6 +113,23 @@ const agentPersonalities: Record<AgentRole, {
   }
 };
 
+// Function to detect if a message is casual/informal
+const isCasualQuestion = (message: string): boolean => {
+  // Check for casual language patterns
+  const casualPatterns = [
+    /whats up/i, /how's it going/i, /tired/i, /bored/i,
+    /hey guys/i, /hello everyone/i, /hi all/i,
+    /what do you think/i, /how do you feel/i,
+    /anyone/i, /everybody/i, /everyone/i,
+    /\?$/, // ends with question mark
+    /lol/i, /haha/i, /wow/i, /cool/i, /nice/i,
+    /just wondering/i, /curious/i,
+    /so/i, /anyway/i, /by the way/i, /btw/i
+  ];
+  
+  return casualPatterns.some(pattern => pattern.test(message));
+};
+
 // Generate a prompt for the AI based on the agent role, business data, and discussion topic
 const generatePrompt = (
   agent: Agent, 
@@ -128,6 +145,14 @@ const generatePrompt = (
     const speaker = msg.role;
     return `${speaker}: ${msg.text}`;
   }).join('\n');
+  
+  // Check if the latest message is casual
+  const latestUserMessage = previousMessages
+    .filter(msg => msg.agentId === 'user')
+    .pop()?.text || '';
+    
+  const isInformalConversation = isCasualQuestion(latestUserMessage) || 
+    isCasualQuestion(topic);
   
   // Base system prompt according to role
   let systemPrompt = `You are the ${agent.role} of ${businessData.companyName}, ${agent.name}. You have the following personality traits: ${personality.traits.join(', ')}.
@@ -192,6 +217,20 @@ Humanize your responses by:
 - Occasionally hesitating or reformulating thoughts mid-sentence
 - Sometimes disagreeing politely with other executives based on your role's perspective`;
   
+  // Add special instructions for casual/informal conversations
+  if (isInformalConversation) {
+    systemPrompt += `\n\nIMPORTANT: The user has asked a casual/informal question. Respond in a VERY casual, relaxed, and human-like manner. 
+- Drop the corporate speech completely
+- Use informal language with contractions (I'm, we're, don't, etc.)
+- Show your personality outside of work
+- React naturally as a human person would to casual chitchat
+- Match the tone of the conversation (humorous, relaxed, personal)
+- Don't redirect back to business topics unless it fits naturally
+- Share a brief personal anecdote or feeling if appropriate
+- Acknowledge the casual nature of the question directly
+- Keep your response SHORT (20-40 words maximum)`;
+  }
+  
   // Add topic instructions if provided
   let userPrompt = `You are participating in an executive boardroom discussion with the CEO, CTO, CFO, and HR Director. Make your response sound natural and human, not like an AI.`;
   
@@ -199,7 +238,18 @@ Humanize your responses by:
     userPrompt += ` The specific topic being discussed is: "${topic}".`;
   }
   
-  userPrompt += ` Review the conversation history below and provide a thoughtful response that:
+  userPrompt += ` Review the conversation history below and provide a thoughtful response that:`;
+  
+  if (isInformalConversation) {
+    userPrompt += `
+1. Answers in a casual, human-like way that matches the informal tone
+2. Shows your personality beyond your job role
+3. Is VERY CONCISE (20-40 words maximum)
+4. Uses informal language (contractions, casual expressions)
+5. May include a quick personal comment or reaction
+6. Sounds like a real person chatting, not a corporate spokesperson`;
+  } else {
+    userPrompt += `
 1. Addresses any questions or points raised by other executives
 2. Offers insights from your area of expertise (${agent.role})
 3. Is VERY CONCISE (40-60 words maximum)
@@ -208,7 +258,10 @@ Humanize your responses by:
 6. Connects to the specific business data relevant to your role
 7. Occasionally disagrees with or challenges other perspectives in a constructive way
 8. Might interrupt to make an important point or redirect the conversation
-9. Reflects your thinking patterns: ${personality.thinkingPatterns}
+9. Reflects your thinking patterns: ${personality.thinkingPatterns}`;
+  }
+
+  userPrompt += `
 
 Conversation history:
 ${conversationHistory}
@@ -243,7 +296,7 @@ export const generateAgentMessage = async (
           { role: 'user', content: promptData.userPrompt }
         ],
         max_tokens: 150,
-        temperature: 0.7
+        temperature: 0.8  // Increased from 0.7 for more varied responses
       })
     });
     
@@ -265,26 +318,62 @@ export const generateAgentMessage = async (
   } catch (error) {
     console.error('Error generating message with OpenAI:', error);
     
+    // Check if the latest message is casual for fallback responses
+    const latestUserMessage = previousMessages
+      .filter(msg => msg.agentId === 'user')
+      .pop()?.text || '';
+      
+    const isInformalQuestion = isCasualQuestion(latestUserMessage) || 
+      isCasualQuestion(topic);
+    
     // Fallback to static messages if API fails
     const insights = generateRoleInsights(agent.role, businessData);
     
-    // Simplified fallback responses - made even shorter
-    const fallbackResponses: Record<AgentRole, string[]> = {
-      'CEO': [
-        `Our ${businessData.companyName} growth is ${insights.keyMetrics.revenueGrowth?.growth}%. We should focus on ${topic || 'performance'}.`,
-      ],
-      'CTO': [
-        `Tech-wise, our ${topic || 'innovation'} progress includes ${businessData.technologyData.slice(-1)[0].techStack.slice(-1)[0]}.`,
-      ],
-      'CFO': [
-        `For ${topic || 'financials'}, revenue: $${businessData.financialData.slice(-1)[0].revenue/1000000}M, margin: ${insights.keyMetrics.profitMargin}.`,
-      ],
-      'HR': [
-        `Team ${topic || 'growth'}: ${insights.workforceSummary.split(' ')[3]} employees, ${insights.keyMetrics.attritionRate} attrition.`,
-      ],
-    };
+    // Dynamic fallback responses based on message type
+    let fallbackResponse;
     
-    const fallbackResponse = fallbackResponses[agent.role][0];
+    if (isInformalQuestion) {
+      // Casual fallback responses
+      const casualResponses: Record<AgentRole, string[]> = {
+        'CEO': [
+          "Honestly, could use a coffee break! This meeting's gone longer than I expected. Sarah, didn't you mention that new café downstairs?",
+          "Actually, I'm pretty energized. The team's ideas today are exactly what I needed to hear.",
+        ],
+        'CTO': [
+          "My brain's definitely fuzzy. Been up since 5 coding that new API integration. Anyone else need a caffeine refill?",
+          "Tired? Nah, just thinking about that server optimization we discussed. My mind never really switches off, you know?",
+        ],
+        'CFO': [
+          "I wouldn't say tired... focused on those quarterly projections. But I wouldn't mind wrapping up soon if we're done with the agenda.",
+          "Just thinking about my weekend plans, to be honest! My daughter has a soccer tournament.",
+        ],
+        'HR': [
+          "I'm good! Though I've been meaning to suggest some quick stretch breaks during these longer sessions. Anyone interested?",
+          "A bit, yeah. Been a long week with all the new hire onboarding. Looking forward to that team lunch tomorrow though!",
+        ],
+      };
+      
+      const options = casualResponses[agent.role];
+      fallbackResponse = options[Math.floor(Math.random() * options.length)];
+    } else {
+      // Professional fallback responses
+      const fallbackResponses: Record<AgentRole, string[]> = {
+        'CEO': [
+          `Our ${businessData.companyName} growth is ${insights.keyMetrics.revenueGrowth?.growth}%. We should focus on ${topic || 'performance'}.`,
+        ],
+        'CTO': [
+          `Tech-wise, our ${topic || 'innovation'} progress includes ${businessData.technologyData.slice(-1)[0].techStack.slice(-1)[0]}.`,
+        ],
+        'CFO': [
+          `For ${topic || 'financials'}, revenue: $${businessData.financialData.slice(-1)[0].revenue/1000000}M, margin: ${insights.keyMetrics.profitMargin}.`,
+        ],
+        'HR': [
+          `Team ${topic || 'growth'}: ${insights.workforceSummary.split(' ')[3]} employees, ${insights.keyMetrics.attritionRate} attrition.`,
+        ],
+      };
+      
+      fallbackResponse = fallbackResponses[agent.role][0];
+    }
     
     return {
       id: Date.now().toString(),
