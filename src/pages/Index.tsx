@@ -5,6 +5,7 @@ import ControlPanel from '../components/ControlPanel';
 import BusinessDataPanel from '../components/BusinessDataPanel';
 import DatasetUploadModal from '../components/DatasetUploadModal';
 import DecisionSummaryCard from '../components/DecisionSummaryCard';
+import BoardroomQuestionInput from '../components/BoardroomQuestionInput';
 import { MeetingState, Message, Agent } from '../types';
 import { getDefaultAgents, getInitialMessages, simulateConversation } from '../utils/agentUtils';
 import { exportDecisionSummary } from '../utils/summaryUtils';
@@ -305,8 +306,8 @@ const Index = () => {
     // Create a new message object
     const newMessage: Message = {
       id: `user-message-${Date.now()}`,
-      agentId: 'user', // Special ID for user messages
-      role: 'CEO', // Default role for user messages
+      agentId: 'user',
+      role: 'CEO',
       text,
       timestamp: new Date(),
       status: 'sent',
@@ -325,7 +326,6 @@ const Index = () => {
     }));
     
     // In a real app, we'd send this message to the AI agents to process
-    // For now, we'll just add it to the transcript
     toast({
       title: "Message Sent",
       description: "Your message has been added to the discussion transcript.",
@@ -333,12 +333,50 @@ const Index = () => {
     });
   };
   
+  // Handle sending questions to the boardroom
+  const handleSendBoardroomQuestion = (question: string) => {
+    // Create a new message object
+    const newMessage: Message = {
+      id: `user-message-${Date.now()}`,
+      agentId: 'user',
+      role: 'CEO',
+      text: question,
+      timestamp: new Date(),
+      status: 'sent',
+      sentiment: 'neutral',
+      entities: [],
+      keywords: []
+    };
+    
+    // Add to all messages for transcript
+    setMeetingState(prev => ({
+      ...prev,
+      messages: [...prev.messages, newMessage]
+    }));
+    
+    // In a real app, we'd send this message to the AI agents to process
+    toast({
+      title: "Question Submitted",
+      description: "Your question has been sent to the executive board.",
+      duration: 3000,
+    });
+    
+    // If the meeting isn't active yet, ask if the user wants to start it
+    if (meetingState.status !== 'active') {
+      toast({
+        title: "Start Discussion?",
+        description: "Click 'Start Discussion' to begin the boardroom meeting.",
+        duration: 5000,
+      });
+    }
+  };
+  
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <header className="glass-panel mb-6 p-4 flex justify-between items-center animate-fade-in hover-glow">
         <div>
-          <h1 className="text-2xl font-bold">{businessData?.companyName || 'Executive Meeting'}</h1>
+          <h1 className="text-2xl font-bold">{businessData?.companyName || 'Executive Boardroom'}</h1>
           <p className="text-muted-foreground">
             {meetingState.status === 'initializing' ? 'Ready to start discussion' :
              meetingState.status === 'active' ? 'In Progress' :
@@ -412,6 +450,12 @@ const Index = () => {
           onStartDiscussion={handleOpenStartDiscussionDialog}
           hasBusinessData={!!businessData}
           onSendChatMessage={handleSendChatMessage}
+        />
+        
+        {/* Boardroom Question Input (floating) */}
+        <BoardroomQuestionInput 
+          onSendQuestion={handleSendBoardroomQuestion}
+          disabled={meetingState.status === 'ended'}
         />
       </main>
       
