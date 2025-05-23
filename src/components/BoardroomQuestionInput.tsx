@@ -87,7 +87,7 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
                     ? "Ask a follow-up question..." 
                     : "Type your question to the executive board..."
               }
-              className={`question-input ${isCasualMode ? 'casual-mode' : ''}`}
+              className={`question-input ${isCasualMode ? 'bg-amber-50 border-amber-300' : ''}`}
               disabled={disabled}
             />
             <Button 
@@ -95,7 +95,7 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
               variant="ghost"
               size="icon"
               onClick={toggleCasualMode}
-              className={`mode-toggle ${isCasualMode ? 'active' : ''}`}
+              className={`mode-toggle ${isCasualMode ? 'bg-amber-100 text-amber-600' : ''}`}
               title={isCasualMode ? "Switch to business mode" : "Switch to casual chat mode"}
             >
               <Coffee size={18} className={isCasualMode ? "text-amber-500" : ""} />
@@ -123,15 +123,6 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
           )}
         </form>
       )}
-      <style jsx>{`
-        .question-input.casual-mode {
-          background-color: rgba(251, 191, 36, 0.05);
-          border-color: rgba(251, 191, 36, 0.3);
-        }
-        .mode-toggle.active {
-          background-color: rgba(251, 191, 36, 0.1);
-        }
-      `}</style>
     </div>
   );
 };
