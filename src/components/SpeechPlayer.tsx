@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Volume2, VolumeX } from 'lucide-react';
@@ -17,23 +16,6 @@ const voiceMap: Record<string, string> = {
   'CTO': 'TX3LPaxmHKxFdv7VOQHJ', // Liam - technical male with analytical delivery
   'CFO': 'EXAVITQu4vr4xnSDxMaL', // Sarah - precise female with measured cadence
   'HR': 'iP95p4xoKVk53GoZ742B', // Chris - empathetic male with warm tone
-};
-
-// Function to detect if a message is casual/informal
-const isCasualMessage = (text: string): boolean => {
-  // Check for casual language patterns
-  const casualPatterns = [
-    /whats up/i, /how's it going/i, /tired/i, /bored/i,
-    /hey guys/i, /hello everyone/i, /hi all/i,
-    /what do you think/i, /how do you feel/i,
-    /anyone/i, /everybody/i, /everyone/i,
-    /\?$/, // ends with question mark
-    /lol/i, /haha/i, /wow/i, /cool/i, /nice/i,
-    /just wondering/i, /curious/i,
-    /so/i, /anyway/i, /by the way/i, /btw/i
-  ];
-  
-  return casualPatterns.some(pattern => pattern.test(text));
 };
 
 // Enhanced personality traits to make voices more distinct and human-like
@@ -134,9 +116,6 @@ const humanizeText = (text: string, role: string): string => {
   const traits = personalityTraits[role];
   if (!traits) return text;
   
-  // Determine if the message is casual in tone
-  const isCasual = isCasualMessage(text);
-  
   // Add occasional commas to create natural pauses
   let humanizedText = text;
   
@@ -146,58 +125,11 @@ const humanizeText = (text: string, role: string): string => {
     humanizedText = sentences.join(', . ');
   }
   
-  // If casual, add more speech imperfections and casual fillers
-  if (isCasual) {
-    // Add more casual fillers at the beginning
-    const casualFillers = [
-      "Hmm, ", "Well... ", "Oh, ", "Honestly, ", "Gosh, ", 
-      "Ugh, ", "You know what? ", "To be honest, ", "Man, ",
-      "So, um, ", "Yeah, ", "I mean, ", "Look, ", "Hey, "
-    ];
-    
-    if (Math.random() < 0.7) { // Higher probability for casual conversation
-      const randomFiller = casualFillers[Math.floor(Math.random() * casualFillers.length)];
-      humanizedText = `${randomFiller}${humanizedText.charAt(0).toLowerCase() + humanizedText.slice(1)}`;
-    }
-    
-    // Add mid-sentence hedges and fillers more frequently
-    const casualHedges = [
-      " like, ", " you know, ", " I guess, ", " sort of, ", " kinda, ", 
-      " I mean, ", " basically, ", " actually, ", " literally, ", " seriously, "
-    ];
-    
-    if (humanizedText.length > 20 && Math.random() < 0.6) {
-      const words = humanizedText.split(' ');
-      if (words.length > 5) {
-        const insertIndex = Math.floor(words.length / 2);
-        const randomHedge = casualHedges[Math.floor(Math.random() * casualHedges.length)];
-        words.splice(insertIndex, 0, randomHedge);
-        humanizedText = words.join(' ');
-      }
-    }
-    
-    // Add laughter or amusement indicators for very casual messages
-    if (Math.random() < 0.3) {
-      const laughs = [
-        " *slight laugh* ", " *chuckles* ", " *smiles* ", 
-        " *laughs* ", " ha, ", " heh, "
-      ];
-      const randomLaugh = laughs[Math.floor(Math.random() * laughs.length)];
-      
-      // Add at the beginning or end
-      if (Math.random() < 0.5) {
-        humanizedText = `${randomLaugh}${humanizedText}`;
-      } else {
-        humanizedText = `${humanizedText}${randomLaugh}`;
-      }
-    }
-  } else {
-    // For formal messages, use the existing emphasis patterns
-    traits.emphasisWords.forEach(word => {
-      const regex = new RegExp(`\\b${word}\\b`, 'gi');
-      humanizedText = humanizedText.replace(regex, `, ${word},`);
-    });
-  }
+  // Emphasize key words based on role
+  traits.emphasisWords.forEach(word => {
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    humanizedText = humanizedText.replace(regex, `, ${word},`);
+  });
   
   // Add occasional role-specific phrases, terms, and speech patterns
   if (Math.random() < 0.3) {

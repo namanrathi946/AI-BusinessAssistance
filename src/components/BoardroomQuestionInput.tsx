@@ -1,8 +1,7 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, Send, Coffee } from 'lucide-react';
+import { MessageSquare, Send } from 'lucide-react';
 
 interface BoardroomQuestionInputProps {
   onSendQuestion: (question: string) => void;
@@ -13,7 +12,6 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
   const [question, setQuestion] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [hasAskedQuestion, setHasAskedQuestion] = useState(false);
-  const [isCasualMode, setIsCasualMode] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
@@ -31,20 +29,6 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
       setQuestion('');
       setHasAskedQuestion(true);
       
-      // Auto-detect if the question was casual
-      const casualPatterns = [
-        /whats up/i, /how's it going/i, /tired/i, /bored/i,
-        /hey guys/i, /hello everyone/i, /hi all/i,
-        /what do you think/i, /how do you feel/i,
-        /anyone/i, /everybody/i, /everyone/i,
-        /so/i, /anyway/i, /by the way/i, /btw/i
-      ];
-      
-      const isCasual = casualPatterns.some(pattern => pattern.test(question));
-      if (isCasual) {
-        setIsCasualMode(true);
-      }
-      
       setIsExpanded(true);
       
       setTimeout(() => {
@@ -56,10 +40,6 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
   const toggleExpand = () => {
     const newState = !isExpanded;
     setIsExpanded(newState);
-  };
-  
-  const toggleCasualMode = () => {
-    setIsCasualMode(!isCasualMode);
   };
   
   return (
@@ -80,26 +60,10 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
               ref={inputRef}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder={
-                isCasualMode 
-                  ? "Chat casually with the team..." 
-                  : hasAskedQuestion 
-                    ? "Ask a follow-up question..." 
-                    : "Type your question to the executive board..."
-              }
-              className={`question-input ${isCasualMode ? 'bg-amber-50 border-amber-300' : ''}`}
+              placeholder={hasAskedQuestion ? "Ask a follow-up question..." : "Type your question to the executive board..."}
+              className="question-input"
               disabled={disabled}
             />
-            <Button 
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={toggleCasualMode}
-              className={`mode-toggle ${isCasualMode ? 'bg-amber-100 text-amber-600' : ''}`}
-              title={isCasualMode ? "Switch to business mode" : "Switch to casual chat mode"}
-            >
-              <Coffee size={18} className={isCasualMode ? "text-amber-500" : ""} />
-            </Button>
             <Button 
               type="submit" 
               disabled={!question.trim() || disabled} 
@@ -116,11 +80,6 @@ const BoardroomQuestionInput = ({ onSendQuestion, disabled = false }: BoardroomQ
           >
             {hasAskedQuestion ? "Hide" : "Cancel"}
           </Button>
-          {isCasualMode && (
-            <div className="text-xs text-muted-foreground mt-1 italic">
-              Casual chat mode is on. The executives will respond in a more relaxed, human way.
-            </div>
-          )}
         </form>
       )}
     </div>
