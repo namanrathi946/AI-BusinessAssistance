@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
+    --background: 225 25% 97%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -15,6 +15,7 @@
 
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
+    --primary-glow: 221.2 83.2% 63.3%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -22,15 +23,31 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 271 91% 65%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 221.2 83.2% 53.3%;
+
+    --radius: 1rem;
+    
+    /* Premium shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(222.2 84% 4.9% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(222.2 84% 4.9% / 0.1), 0 2px 4px -1px hsl(222.2 84% 4.9% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(222.2 84% 4.9% / 0.1), 0 4px 6px -2px hsl(222.2 84% 4.9% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(222.2 84% 4.9% / 0.1), 0 10px 10px -5px hsl(222.2 84% 4.9% / 0.04);
+    --shadow-glow: 0 0 20px hsl(var(--primary) / 0.3);
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(221.2 83.2% 53.3%) 0%, hsl(271 91% 65%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(210 40% 98%) 0%, hsl(225 25% 97%) 100%);
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(221.2 83.2% 63.3% / 0.3) 0px, transparent 50%),
+                      radial-gradient(at 80% 0%, hsl(271 91% 75% / 0.3) 0px, transparent 50%),
+                      radial-gradient(at 0% 50%, hsl(221.2 83.2% 73.3% / 0.2) 0px, transparent 50%);
 
     --radius: 1rem;
 
@@ -48,14 +65,15 @@
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 224 71% 8%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 224 71% 8%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --primary-glow: 221.2 83.2% 63.3%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -63,15 +81,29 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 271 91% 65%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 221.2 83.2% 53.3%;
+    
+    /* Premium shadows for dark mode */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -1px hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -2px hsl(0 0% 0% / 0.3);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.5), 0 10px 10px -5px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 30px hsl(var(--primary) / 0.5);
+    
+    /* Gradients for dark mode */
+    --gradient-primary: linear-gradient(135deg, hsl(221.2 83.2% 53.3%) 0%, hsl(271 91% 65%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(224 71% 8%) 0%, hsl(222.2 84% 6%) 100%);
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(221.2 83.2% 53.3% / 0.2) 0px, transparent 50%),
+                      radial-gradient(at 80% 0%, hsl(271 91% 65% / 0.2) 0px, transparent 50%),
+                      radial-gradient(at 0% 50%, hsl(221.2 83.2% 63.3% / 0.15) 0px, transparent 50%);
   }
 }
 
@@ -83,12 +115,20 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    background-image: var(--gradient-mesh);
+    background-attachment: fixed;
   }
 }
 
 /* Custom styles for virtual meeting */
 .glass-panel {
-  @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border border-gray-200/50 dark:border-gray-800/50 rounded-2xl shadow-lg transition-all duration-300;
+  @apply bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/50 rounded-2xl transition-all duration-300;
+  box-shadow: var(--shadow-lg);
+}
+
+.glass-panel:hover {
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-2px);
 }
 
 .message-bubble {
@@ -219,7 +259,11 @@
 }
 
 .hover-glow {
-  @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/10;
+  @apply transition-all duration-300;
+}
+
+.hover-glow:hover {
+  box-shadow: var(--shadow-glow);
 }
 
 /* Add new hover scale for grid items */
@@ -267,15 +311,35 @@
 
 /* Boardroom styling */
 .boardroom-container {
-  @apply px-4 py-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-inner;
+  @apply px-4 py-6 rounded-2xl backdrop-blur-xl border border-border/50 relative overflow-hidden;
+  background: linear-gradient(135deg, hsl(var(--card) / 0.9) 0%, hsl(var(--background) / 0.8) 100%);
+  box-shadow: var(--shadow-xl);
+}
+
+.boardroom-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gradient-primary);
 }
 
 .agent-card {
-  @apply border-l-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg overflow-hidden;
+  @apply border-l-4 rounded-xl transition-all duration-500 overflow-hidden backdrop-blur-sm;
+  box-shadow: var(--shadow-md);
+}
+
+.agent-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
 }
 
 .agent-card.speaking {
-  @apply shadow-lg scale-102 z-10;
+  box-shadow: var(--shadow-glow);
+  transform: scale(1.02) translateY(-6px);
+  z-index: 10;
 }
 
 .boardroom-panel {

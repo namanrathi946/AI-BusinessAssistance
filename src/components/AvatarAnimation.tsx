@@ -22,13 +22,18 @@ const AvatarAnimation = ({ agent, size = 'md' }: AvatarAnimationProps) => {
   
   return (
     <div className={cn(
-      'avatar-container hover-glow cursor-pointer',
+      'avatar-container hover-glow cursor-pointer relative',
       status === 'speaking' && 'speaking',
       sizeClasses[size]
     )}>
+      {status === 'speaking' && (
+        <div className="absolute inset-0 rounded-full animate-glow" 
+             style={{ boxShadow: 'var(--shadow-glow)' }} />
+      )}
+      
       <div className={cn(
         'avatar-pulse',
-        status === 'speaking' && 'speaking',
+        status === 'speaking' && 'speaking animate-pulse',
         status === 'listening' && 'listening'
       )} />
       
@@ -36,8 +41,8 @@ const AvatarAnimation = ({ agent, size = 'md' }: AvatarAnimationProps) => {
         src={avatar || fallbackImage} 
         alt={`${role} - ${name}`}
         className={cn(
-          'h-full w-full object-cover transition-transform duration-300',
-          status === 'speaking' ? 'animate-bounce-subtle' : 'hover:scale-110'
+          'h-full w-full object-cover transition-all duration-500 relative z-10',
+          status === 'speaking' ? 'animate-float scale-105' : 'hover:scale-110'
         )}
         onError={(e) => {
           const target = e.target as HTMLImageElement;

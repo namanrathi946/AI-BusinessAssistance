@@ -35,10 +35,14 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
   }
   
   return (
-    <div className="boardroom-container">
-      <h2 className="text-xl font-semibold mb-4 text-center">Executive Boardroom</h2>
+    <div className="boardroom-container animate-fade-in">
+      <div className="flex items-center justify-center mb-6">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          Executive Boardroom
+        </h2>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-        {aiAgents.map((agent) => {
+        {aiAgents.map((agent, index) => {
           const isCurrentSpeaker = agent.id === currentSpeaker;
           
           return (
@@ -48,6 +52,7 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
               style={{
                 backgroundColor: `${getAgentBackgroundColor(agent.role)}`,
                 borderColor: `${agent.color}`,
+                animationDelay: `${index * 0.1}s`
               }}
             >
               <AvatarPanel
