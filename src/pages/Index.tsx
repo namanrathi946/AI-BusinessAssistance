@@ -388,30 +388,29 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <header className="glass-panel mb-6 p-6 flex justify-between items-center animate-fade-in relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+      <header className="glass-panel mb-8 p-6 flex justify-between items-center animate-fade-in">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
             {businessData?.companyName || 'Executive Boardroom'}
           </h1>
-          <p className="text-muted-foreground mt-1 flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full animate-pulse ${
-              meetingState.status === 'active' ? 'bg-meeting-green' :
-              meetingState.status === 'paused' ? 'bg-meeting-yellow' :
-              meetingState.status === 'ended' ? 'bg-meeting-red' : 'bg-meeting-blue'
+          <p className="text-muted-foreground mt-2 flex items-center gap-2 text-sm">
+            <span className={`h-1.5 w-1.5 rounded-full ${
+              meetingState.status === 'active' ? 'bg-foreground animate-pulse' :
+              meetingState.status === 'paused' ? 'bg-muted-foreground' :
+              meetingState.status === 'ended' ? 'bg-muted-foreground/50' : 'bg-foreground/60 animate-pulse'
             }`}></span>
             {meetingState.status === 'initializing' ? 'Ready to start discussion' :
              meetingState.status === 'active' ? 'Discussion in Progress' :
              meetingState.status === 'paused' ? 'Discussion Paused' : 'Discussion Ended'}
           </p>
         </div>
-        <div className="relative z-10 flex items-center gap-3 px-4 py-2 rounded-full bg-background/50 backdrop-blur-sm border border-border/50">
-          <span className={`h-3 w-3 rounded-full ${
-            meetingState.status === 'active' ? 'bg-meeting-green animate-glow' :
-            meetingState.status === 'paused' ? 'bg-meeting-yellow' :
-            meetingState.status === 'ended' ? 'bg-meeting-red' : 'bg-meeting-blue animate-glow'
+        <div className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-muted/50 border border-border">
+          <span className={`h-2 w-2 rounded-full ${
+            meetingState.status === 'active' ? 'bg-foreground animate-pulse' :
+            meetingState.status === 'paused' ? 'bg-muted-foreground' :
+            meetingState.status === 'ended' ? 'bg-muted-foreground/50' : 'bg-foreground/60'
           }`}></span>
-          <span className="text-sm font-semibold">
+          <span className="text-xs font-semibold uppercase tracking-wider">
             {meetingState.status === 'active' ? 'Live' :
              meetingState.status === 'paused' ? 'Paused' :
              meetingState.status === 'ended' ? 'Ended' : 'Ready'}

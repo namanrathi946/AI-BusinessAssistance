@@ -68,14 +68,10 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))'
         },
-        'meeting-blue': '#0A84FF',
-        'meeting-green': '#30D158',
-        'meeting-red': '#FF453A',
-        'meeting-yellow': '#FFD60A',
-        'meeting-purple': '#BF5AF2',
-        'meeting-gray': '#8E8E93',
-        'meeting-light': '#F2F2F7',
-        'meeting-dark': '#1C1C1E',
+        'meeting-active': 'hsl(0 0% 20%)',
+        'meeting-inactive': 'hsl(0 0% 60%)',
+        'meeting-light': 'hsl(0 0% 95%)',
+        'meeting-dark': 'hsl(0 0% 15%)',
       },
       boxShadow: {
         'sm': 'var(--shadow-sm)',

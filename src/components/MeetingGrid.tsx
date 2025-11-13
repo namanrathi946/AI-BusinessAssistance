@@ -36,12 +36,12 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
   
   return (
     <div className="boardroom-container animate-fade-in">
-      <div className="flex items-center justify-center mb-6">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+      <div className="flex items-center justify-center mb-8">
+        <h2 className="text-xl font-semibold tracking-wide uppercase text-muted-foreground">
           Executive Boardroom
         </h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 h-full">
         {aiAgents.map((agent, index) => {
           const isCurrentSpeaker = agent.id === currentSpeaker;
           
@@ -50,8 +50,6 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
               key={agent.id}
               className={`agent-card ${isCurrentSpeaker ? 'speaking' : ''}`}
               style={{
-                backgroundColor: `${getAgentBackgroundColor(agent.role)}`,
-                borderColor: `${agent.color}`,
                 animationDelay: `${index * 0.1}s`
               }}
             >
@@ -68,20 +66,5 @@ const MeetingGrid = ({ agents, messages, currentSpeaker }: MeetingGridProps) => 
   );
 };
 
-// Helper function to get background color based on agent role
-const getAgentBackgroundColor = (role: string): string => {
-  switch (role) {
-    case 'CFO':
-      return 'rgba(240, 253, 244, 0.8)'; // Light green
-    case 'CTO':
-      return 'rgba(219, 234, 254, 0.8)'; // Light blue
-    case 'HR':
-      return 'rgba(237, 233, 254, 0.8)'; // Light purple
-    case 'CEO':
-      return 'rgba(255, 251, 235, 0.8)'; // Light gold
-    default:
-      return 'rgba(249, 250, 251, 0.8)'; // Light gray
-  }
-};
 
 export default MeetingGrid;
